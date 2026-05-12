@@ -885,17 +885,62 @@ export function ReportBuilder({
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar - Hidden on mobile, shown on large screens */}
           <div className="sticky top-20 hidden space-y-4 self-start lg:col-span-3 lg:block">
-            <TableOfContents sections={report.sections || []} onItemClick={scrollToSection} />
-            <AddSectionButton variant="sidebar" />
-
-            {/* Report Info */}
+            {/* Sections: TOC + add button + collapsible legend */}
             <div className="border-border bg-card rounded-lg border p-4">
-              <h3 className="text-foreground mb-3 text-sm font-semibold">Report Details</h3>
-              <div className="space-y-2 text-sm">
+              <div className="mb-3 flex items-baseline justify-between">
+                <h3 className="text-foreground text-sm font-semibold">Sections</h3>
+                <span className="text-muted-foreground font-mono text-xs">
+                  {report.sections?.length || 0}
+                </span>
+              </div>
+              <TableOfContents sections={report.sections || []} onItemClick={scrollToSection} />
+              <div className="mt-3">
+                <AddSectionButton variant="sidebar" />
+              </div>
+              <details className="border-border group mt-3 border-t pt-3">
+                <summary className="text-muted-foreground hover:text-foreground cursor-pointer list-none text-xs transition-colors select-none">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="transition-transform group-open:rotate-90">›</span>
+                    Section Types
+                  </span>
+                </summary>
+                <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1.5 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-3 w-3 rounded border border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-950/30" />
+                    <span className="text-muted-foreground">Cover Page</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-3 w-3 rounded border border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-950/30" />
+                    <span className="text-muted-foreground">Text</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-3 w-3 rounded border border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-950/30" />
+                    <span className="text-muted-foreground">Text + Widgets</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-3 w-3 rounded border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30" />
+                    <span className="text-muted-foreground">Findings</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-3 w-3 rounded border border-indigo-300 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-950/30" />
+                    <span className="text-muted-foreground">Compliance</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-3 w-3 rounded border border-cyan-300 bg-cyan-50 dark:border-cyan-700 dark:bg-cyan-950/30" />
+                    <span className="text-muted-foreground">Dynamic Form</span>
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            {/* Identity */}
+            <div className="border-border bg-card rounded-lg border p-4">
+              <h3 className="text-foreground mb-3 text-sm font-semibold">Report</h3>
+              <div className="space-y-3 text-sm">
                 {readOnlyType ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Type:</span>
-                    <p className="text-foreground font-medium">
+                  <div>
+                    <span className="text-muted-foreground text-xs">Type</span>
+                    <p className="text-foreground mt-0.5 font-medium">
                       {reportTypeOptions.find((opt) => opt.value === getReportTypeValue())?.label ||
                         getReportTypeValue()}
                     </p>
@@ -914,107 +959,97 @@ export function ReportBuilder({
                     className="min-w-full"
                   />
                 )}
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Source {getEntityLabel()}:</span>
-                  <p className="text-foreground font-medium">{entity.title || "-"}</p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Status:</span>
-                  <StatusBadge status={report.status as string} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Sections:</span>
-                  <p className="text-foreground font-medium">{report.sections?.length || 0}</p>
-                </div>
                 <div>
-                  <span className="text-muted-foreground text-sm">Active Version</span>
-                  {versions.length === 0 ? (
-                    <div className="mt-1 flex items-center gap-2">
-                      <Badge variant={"default"} className="font-medium">
-                        {report.version}
-                      </Badge>
-                      <span className="text-muted-foreground text-xs">first save creates v1</span>
-                    </div>
-                  ) : (
-                    <SelectField
-                      value={String(activeVersionNumber ?? versions[0]?.version_number ?? 1)}
-                      onValueChange={(value) => {
-                        const next = Number(value);
-                        if (next === activeVersionNumber) return;
-                        setPendingSwitch(next);
-                        setSwitchDialogOpen(true);
-                      }}
-                      options={versionOptions}
-                      placeholder="Select version"
-                      isDisabled={setActiveVersionMutation.isPending}
-                      classNames={{ wrapper: "mt-1" }}
-                    />
-                  )}
-                  {versions.length > 0 && (
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {versions.length} version{versions.length === 1 ? "" : "s"} · v{activeVersionNumber} active
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <span className="text-muted-foreground text-xs">Created</span>
-                  <p className="text-foreground text-sm font-medium">
-                    {formatDate(report?.created_at || new Date())}
-                    {report.created_by && (
-                      <span className="text-muted-foreground font-normal">
-                        {" "}
-                        by {report.created_by.name}
-                      </span>
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground text-xs">Last Modified</span>
-                  <p className="text-foreground text-sm font-medium">
-                    {report?.updated_at
-                      ? formatDistanceToNow(report?.updated_at || new Date(), {
-                          addSuffix: true
-                        })
-                      : "--"}
-                    {report.updated_by && (
-                      <span className="text-muted-foreground font-normal">
-                        {" "}
-                        by {report.updated_by.name}
-                      </span>
-                    )}
+                  <span className="text-muted-foreground text-xs">Source {getEntityLabel()}</span>
+                  <p
+                    className="text-foreground mt-0.5 truncate font-medium"
+                    title={entity.title || "-"}>
+                    {entity.title || "-"}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Section Type Legend */}
+            {/* Workspace: active version + authorship */}
             <div className="border-border bg-card rounded-lg border p-4">
-              <h3 className="text-foreground mb-3 text-sm font-semibold">Section Types</h3>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-950/30" />
-                  <span className="text-muted-foreground">Cover Page</span>
+              <h3 className="text-foreground mb-3 text-sm font-semibold">Workspace</h3>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground text-xs">Active Version</span>
+                  {versions.length === 0 ? (
+                    <div className="mt-1 flex items-center gap-2">
+                      <Badge variant={"default"} className="font-medium">
+                        {report.version}
+                      </Badge>
+                      <span className="text-muted-foreground text-xs">
+                        first save creates v1
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <SelectField
+                        value={String(activeVersionNumber ?? versions[0]?.version_number ?? 1)}
+                        onValueChange={(value) => {
+                          const next = Number(value);
+                          if (next === activeVersionNumber) return;
+                          setPendingSwitch(next);
+                          setSwitchDialogOpen(true);
+                        }}
+                        options={versionOptions}
+                        placeholder="Select version"
+                        isDisabled={setActiveVersionMutation.isPending}
+                        classNames={{ wrapper: "mt-1" }}
+                      />
+                      {(() => {
+                        const active = versions.find(
+                          (v) => v.version_number === activeVersionNumber
+                        );
+                        if (!active) return null;
+                        const lastEdit =
+                          active.edit_log[active.edit_log.length - 1]?.edited_at ??
+                          active.snapshotted_at;
+                        return (
+                          <div className="text-muted-foreground mt-1.5 flex items-center gap-2 text-xs">
+                            <StatusBadge status={active.status} size="sm" />
+                            <span>
+                              edited{" "}
+                              {formatDistanceToNow(new Date(lastEdit), { addSuffix: true })}
+                            </span>
+                          </div>
+                        );
+                      })()}
+                      {versions.length > 1 && (
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          {versions.length} versions
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-950/30" />
-                  <span className="text-muted-foreground">Text Content</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-950/30" />
-                  <span className="text-muted-foreground">Text + Widgets</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30" />
-                  <span className="text-muted-foreground">Findings Selector</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-indigo-300 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-950/30" />
-                  <span className="text-muted-foreground">Compliance Findings</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-cyan-300 bg-cyan-50 dark:border-cyan-700 dark:bg-cyan-950/30" />
-                  <span className="text-muted-foreground">Dynamic Form</span>
+
+                <div className="border-border space-y-1.5 border-t pt-3 text-xs">
+                  <p>
+                    <span className="text-muted-foreground">Created</span>{" "}
+                    <span className="text-foreground font-medium">
+                      {formatDate(report?.created_at || new Date())}
+                    </span>
+                    {report.created_by && (
+                      <span className="text-muted-foreground"> · {report.created_by.name}</span>
+                    )}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Modified</span>{" "}
+                    <span className="text-foreground font-medium">
+                      {report?.updated_at
+                        ? formatDistanceToNow(report?.updated_at || new Date(), {
+                            addSuffix: true
+                          })
+                        : "--"}
+                    </span>
+                    {report.updated_by && (
+                      <span className="text-muted-foreground"> · {report.updated_by.name}</span>
+                    )}
+                  </p>
                 </div>
               </div>
             </div>
