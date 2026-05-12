@@ -19,7 +19,8 @@ import {
   snapshotReportVersion,
   updateReportVersion,
   publishReportVersion,
-  getReportVersion
+  getReportVersion,
+  setActiveVersion
 } from "@/app/_actions/reports-actions";
 import { getWorkpaperByAuditPlanId } from "@/app/_actions/audit-module-actions";
 import { listGeneralFindings } from "@/app/_actions/general-findings-actions";
@@ -533,6 +534,28 @@ export function usePublishVersion(reportId: string) {
     },
     onError: (error: Error) => {
       notify({ description: error.message || "Failed to publish version", type: "error" });
+    }
+  });
+}
+
+/**
+ * Mutation: switch the active version of a report
+ */
+export function useSetActiveVersion(reportId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (versionNumber: number) => {
+      const result = await setActiveVersion(reportId, versionNumber);
+      if (!result.success) throw new Error(result.message || "Failed to switch version");
+      return result.data;
+    },
+    onSuccess: (_data, versionNumber) => {
+      notify({ description: `Switched to v${versionNumber}`, type: "success" });
+      queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT, reportId] });
+      queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT] });
+    },
+    onError: (error: Error) => {
+      notify({ description: error.message || "Failed to switch version", type: "error" });
     }
   });
 }
