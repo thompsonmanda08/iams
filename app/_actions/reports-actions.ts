@@ -471,13 +471,15 @@ export async function getReportVersion(
 }
 
 /**
- * Create a new version snapshot.
+ * Create a new version snapshot from the current editor state.
  *
- * When `draft` is supplied (the in-memory editor state from the client), it is
- * (1) synced into the currently-active version FIRST so unsaved edits are
- * persisted into v_active, and then (2) used as the source for the new
- * snapshot. Without `draft`, the snapshot operates on whatever the server
- * already has — useful for "duplicate active as a new version" workflows.
+ * Branch-point semantics: the existing active version is left UNCHANGED on
+ * the server. The supplied `draft` (in-memory editor state) becomes the
+ * content of the new snapshot. The new snapshot is set as the active version.
+ *
+ * Without `draft`, the snapshot duplicates the server's current top-level
+ * fields — useful for "duplicate active as a new version" workflows where
+ * there are no in-memory edits.
  */
 export async function snapshotReportVersion(
   reportId: string,
@@ -500,11 +502,11 @@ export async function snapshotReportVersion(
     }
     const userRef = buildUserRef(session);
 
-    // Start from the server's authoritative versions[] but allow the caller to
-    // override the top-level draft fields (so in-memory editor edits land).
+    // Server's authoritative versions[] preserved as-is (no sync into active).
+    // Draft top-level fields become the source for the new snapshot only.
     const serverContent = ensureVersionedShape(reportRes.data.data.report_content);
     const draftContent = draft ? ensureVersionedShape(draft) : null;
-    const base: ReportContent = draftContent
+    const snapshotSource: ReportContent = draftContent
       ? {
           ...serverContent,
           title: draftContent.title,
@@ -514,22 +516,12 @@ export async function snapshotReportVersion(
         }
       : serverContent;
 
-    // If we got a draft and there's a valid active version, sync the draft
-    // INTO versions[active] before snapshotting so v_active reflects the
-    // unsaved edits the user just made.
-    let synced: ReportContent = base;
-    if (draftContent && (base.versions ?? []).length > 0) {
-      const activeNum = base.current_version_number;
-      if (typeof activeNum === "number" && findVersionIndex(base.versions ?? [], activeNum) !== -1) {
-        synced = syncTopLevelToVersion(base, activeNum, userRef);
-      }
-    }
+    const newSnapshot = buildSnapshotFromCurrent(snapshotSource, userRef, label);
 
-    const newSnapshot = buildSnapshotFromCurrent(synced, userRef, label);
-
-    const updatedVersions = [...(synced.versions ?? []), newSnapshot];
-    const updatedContent = {
-      ...synced,
+    // Server's versions[] is preserved; only the new snapshot is appended.
+    const updatedVersions = [...(serverContent.versions ?? []), newSnapshot];
+    const updatedContent: ReportContent = {
+      ...snapshotSource,
       versions: updatedVersions,
       current_version_number: newSnapshot.version_number
     };
