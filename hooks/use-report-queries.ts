@@ -15,7 +15,11 @@ import {
   deleteReport,
   publishReport,
   fetchWidgetData as fetchWidgetDataAction,
-  getReportByEntityId
+  getReportByEntityId,
+  snapshotReportVersion,
+  updateReportVersion,
+  publishReportVersion,
+  getReportVersion
 } from "@/app/_actions/reports-actions";
 import { getWorkpaperByAuditPlanId } from "@/app/_actions/audit-module-actions";
 import { listGeneralFindings } from "@/app/_actions/general-findings-actions";
@@ -449,4 +453,86 @@ export function useMultipleWidgetData(
       !!widget.data.data_source_id
     )
   );
+}
+
+/**
+ * Mutation: create a new version snapshot of the current draft
+ */
+export function useSnapshotVersion(reportId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (label?: string) => {
+      const result = await snapshotReportVersion(reportId, label);
+      if (!result.success) throw new Error(result.message || "Failed to snapshot");
+      return result.data;
+    },
+    onSuccess: () => {
+      notify({ description: "Version saved", type: "success" });
+      queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT, reportId] });
+      queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT] });
+    },
+    onError: (error: Error) => {
+      notify({ description: error.message || "Failed to save version", type: "error" });
+    }
+  });
+}
+
+/**
+ * Mutation: update a specific version snapshot
+ */
+export function useUpdateVersion(reportId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      versionNumber: number;
+      patch: Parameters<typeof updateReportVersion>[2];
+      summary?: string;
+    }) => {
+      const result = await updateReportVersion(
+        reportId,
+        args.versionNumber,
+        args.patch,
+        args.summary
+      );
+      if (!result.success) throw new Error(result.message || "Failed to update version");
+      return result.data;
+    },
+    onSuccess: (_data, args) => {
+      notify({ description: `Version ${args.versionNumber} updated`, type: "success" });
+      queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT, reportId] });
+      queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT] });
+    },
+    onError: (error: Error) => {
+      notify({ description: error.message || "Failed to update version", type: "error" });
+    }
+  });
+}
+
+/**
+ * Mutation: publish a specific version
+ */
+export function usePublishVersion(reportId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { versionNumber: number; generatePdf?: boolean }) => {
+      const result = await publishReportVersion(
+        reportId,
+        args.versionNumber,
+        args.generatePdf ?? true
+      );
+      if (!result.success) throw new Error(result.message || "Failed to publish version");
+      return result.data;
+    },
+    onSuccess: (_data, args) => {
+      notify({
+        description: `Version ${args.versionNumber} published`,
+        type: "success"
+      });
+      queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT, reportId] });
+      queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORTS] });
+    },
+    onError: (error: Error) => {
+      notify({ description: error.message || "Failed to publish version", type: "error" });
+    }
+  });
 }
