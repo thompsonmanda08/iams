@@ -19,6 +19,9 @@ import { mergeReportWithTemplate } from "@/lib/config/report-template-merger";
 import { getDataSourceData } from "@/app/_actions/reports-actions";
 import { transformWidgetData } from "@/hooks/shared/use-widget-data";
 import { useSession } from "@/store/session-store";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ReportVersionHistory } from "@/components/reports/report-version-history";
+import { ensureVersionedShape } from "@/lib/config/ensure-versioned-shape";
 
 interface ReportDetailsClientProps {
   reportId: string;
@@ -219,6 +222,12 @@ export function ReportDetailsClient({
     return report;
   }, [initialReport, entity.management_standard, reportId, reportStatus]);
 
+  const versions = useMemo(() => {
+    if (!initialReport) return [];
+    const normalized = ensureVersionedShape(initialReport);
+    return normalized.versions ?? [];
+  }, [initialReport]);
+
   // Dynamically fetch data for widgets that have data_source_id
   const { data: widgetDataMap } = useWidgetDataPopulation(
     mergedReport?.sections || [],
@@ -280,5 +289,23 @@ export function ReportDetailsClient({
   }, [mergedReport, widgetDataMap, entity.id, entityType, setReport, setEntityId, setEntityType]);
 
   // Show ReportBuilder with read-only type since entity is already determined
-  return <ReportBuilder entity={entity} entityType={entityType} readOnlyType />;
+  return (
+    <Tabs defaultValue="editor" className="w-full">
+      <TabsList>
+        <TabsTrigger value="editor">Editor</TabsTrigger>
+        <TabsTrigger value="history">
+          History
+          {versions.length > 0 && (
+            <span className="text-muted-foreground ml-1">({versions.length})</span>
+          )}
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="editor" className="mt-4">
+        <ReportBuilder entity={entity} entityType={entityType} readOnlyType />
+      </TabsContent>
+      <TabsContent value="history" className="mt-4">
+        <ReportVersionHistory reportId={reportId} versions={versions} />
+      </TabsContent>
+    </Tabs>
+  );
 }
