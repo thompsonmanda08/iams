@@ -67,3 +67,44 @@ export function computeAggregateStatus(
   if (versions.every((v) => v.status === "ARCHIVED")) return "ARCHIVED";
   return "DRAFT";
 }
+
+export function syncTopLevelToVersion(
+  content: ReportContent,
+  versionNumber: number,
+  user: ReportUserRef
+): ReportContent {
+  const versions = content.versions ?? [];
+  const idx = findVersionIndex(versions, versionNumber);
+  if (idx === -1) return content;
+
+  const edit: VersionEdit = {
+    edited_at: new Date().toISOString(),
+    edited_by: user
+  };
+
+  const updatedVersion: ReportVersionSnapshot = {
+    ...versions[idx],
+    title: content.title,
+    management_standard: content.management_standard,
+    branding: structuredClone(content.branding),
+    sections: structuredClone(content.sections),
+    edit_log: [...versions[idx].edit_log, edit]
+  };
+
+  const updatedVersions = [...versions];
+  updatedVersions[idx] = updatedVersion;
+
+  return { ...content, versions: updatedVersions };
+}
+
+export function bootstrapV1FromTopLevel(
+  content: ReportContent,
+  user: ReportUserRef
+): ReportContent {
+  const v1 = buildSnapshotFromCurrent({ ...content, versions: [] }, user);
+  return {
+    ...content,
+    versions: [v1],
+    current_version_number: 1
+  };
+}

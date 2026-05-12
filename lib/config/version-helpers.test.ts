@@ -4,7 +4,9 @@ import {
   nextVersionNumber,
   findVersionIndex,
   applyVersionPatch,
-  computeAggregateStatus
+  computeAggregateStatus,
+  syncTopLevelToVersion,
+  bootstrapV1FromTopLevel
 } from "./version-helpers";
 import type {
   ReportContent,
@@ -158,5 +160,105 @@ describe("computeAggregateStatus", () => {
     expect(
       computeAggregateStatus([{ status: "DRAFT" } as ReportVersionSnapshot])
     ).toBe("DRAFT");
+  });
+});
+
+describe("syncTopLevelToVersion", () => {
+  const existingVersion: ReportVersionSnapshot = {
+    version_number: 1,
+    status: "DRAFT",
+    title: "Old Title",
+    branding: { primary_color: "#000", secondary_color: "#111", font_family: "Inter" },
+    sections: [],
+    snapshotted_at: "2026-01-01T00:00:00Z",
+    snapshotted_by: user,
+    edit_log: []
+  };
+
+  const contentWithVersion: ReportContent = {
+    ...baseContent,
+    title: "New Top-Level Title",
+    sections: [
+      {
+        section_id: "s-new",
+        section_type: "text_only",
+        order: 0,
+        include_in_toc: true,
+        toc_level: 1,
+        header: "Edited",
+        widgets: []
+      }
+    ],
+    current_version_number: 1,
+    versions: [existingVersion]
+  };
+
+  it("copies top-level sections, branding, title into the target version", () => {
+    const result = syncTopLevelToVersion(contentWithVersion, 1, user);
+    expect(result.versions?.[0].title).toBe("New Top-Level Title");
+    expect(result.versions?.[0].sections).toEqual(contentWithVersion.sections);
+    expect(result.versions?.[0].sections).not.toBe(contentWithVersion.sections); // deep clone
+  });
+
+  it("appends one edit_log entry recording the editor", () => {
+    const result = syncTopLevelToVersion(contentWithVersion, 1, user);
+    expect(result.versions?.[0].edit_log).toHaveLength(1);
+    expect(result.versions?.[0].edit_log[0].edited_by).toEqual(user);
+    expect(typeof result.versions?.[0].edit_log[0].edited_at).toBe("string");
+  });
+
+  it("does not mutate the input content", () => {
+    const before = JSON.stringify(contentWithVersion);
+    syncTopLevelToVersion(contentWithVersion, 1, user);
+    expect(JSON.stringify(contentWithVersion)).toBe(before);
+  });
+
+  it("leaves untouched versions alone when multiple exist", () => {
+    const v2: ReportVersionSnapshot = { ...existingVersion, version_number: 2, title: "v2 untouched" };
+    const multi: ReportContent = { ...contentWithVersion, versions: [existingVersion, v2] };
+    const result = syncTopLevelToVersion(multi, 1, user);
+    expect(result.versions?.[1].title).toBe("v2 untouched");
+    expect(result.versions?.[1].edit_log).toHaveLength(0);
+  });
+
+  it("returns content unchanged if target version is missing", () => {
+    const result = syncTopLevelToVersion(contentWithVersion, 999, user);
+    expect(result).toEqual(contentWithVersion);
+  });
+});
+
+describe("bootstrapV1FromTopLevel", () => {
+  it("creates exactly one version with version_number=1 and active=1", () => {
+    const empty: ReportContent = { ...baseContent, current_version_number: undefined, versions: [] };
+    const result = bootstrapV1FromTopLevel(empty, user);
+    expect(result.versions).toHaveLength(1);
+    expect(result.versions?.[0].version_number).toBe(1);
+    expect(result.current_version_number).toBe(1);
+  });
+
+  it("captures top-level fields verbatim into v1", () => {
+    const empty: ReportContent = { ...baseContent, current_version_number: undefined, versions: [] };
+    const result = bootstrapV1FromTopLevel(empty, user);
+    expect(result.versions?.[0].title).toBe(baseContent.title);
+    expect(result.versions?.[0].sections).toEqual(baseContent.sections);
+    expect(result.versions?.[0].management_standard).toBe(baseContent.management_standard);
+    expect(result.versions?.[0].branding).toEqual(baseContent.branding);
+  });
+
+  it("sets snapshot metadata on v1", () => {
+    const empty: ReportContent = { ...baseContent, current_version_number: undefined, versions: [] };
+    const result = bootstrapV1FromTopLevel(empty, user);
+    expect(result.versions?.[0].status).toBe("DRAFT");
+    expect(result.versions?.[0].snapshotted_by).toEqual(user);
+    expect(typeof result.versions?.[0].snapshotted_at).toBe("string");
+    expect(result.versions?.[0].edit_log).toEqual([]);
+  });
+
+  it("preserves all other top-level fields", () => {
+    const empty: ReportContent = { ...baseContent, current_version_number: undefined, versions: [] };
+    const result = bootstrapV1FromTopLevel(empty, user);
+    expect(result.report_id).toBe(baseContent.report_id);
+    expect(result.report_type).toBe(baseContent.report_type);
+    expect(result.title).toBe(baseContent.title);
   });
 });
