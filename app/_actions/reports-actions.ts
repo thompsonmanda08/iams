@@ -185,6 +185,13 @@ export async function getReport(reportId: string): Promise<APIResponse> {
       method: "GET"
     });
 
+    // Lazy-migrate report_content shape so consumers always see { versions, current_version_number }
+    if (response?.data?.data?.report_content) {
+      response.data.data.report_content = ensureVersionedShape(
+        response.data.data.report_content
+      );
+    }
+
     return successResponse(response?.data);
   } catch (error: any) {
     return handleError(error, "GET | GET REPORT", `/api/v1/reports/${reportId}`);
