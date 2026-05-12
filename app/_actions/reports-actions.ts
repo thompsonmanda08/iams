@@ -369,20 +369,24 @@ export async function publishReport(
   }
 
   try {
-    // Always snapshot current draft first so published state is tracked
-    const snapshotRes = await snapshotReportVersion(reportId);
-    if (!snapshotRes.success) {
-      return snapshotRes;
-    }
-
-    // Re-read to find the version we just created (snapshotReportVersion sets current_version_number)
     const reportRes = await getReport(reportId);
-    const versionNumber = reportRes.data?.data?.report_content?.current_version_number;
-    if (typeof versionNumber !== "number") {
-      return handleBadRequest("Could not locate snapshot to publish");
+    if (!reportRes.success || !reportRes.data?.data?.report_content) {
+      return handleBadRequest("Report not found");
     }
 
-    return publishReportVersion(reportId, versionNumber, generatePdf);
+    const content = ensureVersionedShape(reportRes.data.data.report_content);
+    const versions = content.versions ?? [];
+    const active = content.current_version_number;
+
+    if (versions.length === 0 || typeof active !== "number") {
+      return handleBadRequest("Save the report first to create a version before publishing");
+    }
+
+    if (findVersionIndex(versions, active) === -1) {
+      return handleBadRequest(`Active version ${active} not found`);
+    }
+
+    return publishReportVersion(reportId, active, generatePdf);
   } catch (error: any) {
     return handleError(error, "POST | PUBLISH REPORT", `/api/v1/reports/${reportId}/publish`);
   }
