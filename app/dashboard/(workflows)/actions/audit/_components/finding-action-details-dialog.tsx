@@ -623,7 +623,7 @@ export function FindingActionDetailsDialog({
                 {actionHasEvidence && isAssignedReviewer && (isGeneralFinding || !isCompliant) && (() => {
                   const terminalStatuses = ["COMPLETE", "COMPLETED", "RESOLVED", "CLOSED"];
                   const findingStatus = String(
-                    generalFindingData?.status ?? (finding as any)?.status ?? ""
+                    generalFindingData?.status ?? (findingData as any)?.status ?? ""
                   ).toUpperCase();
                   const alreadyComplete =
                     terminalStatuses.includes(findingStatus) ||
