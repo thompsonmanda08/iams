@@ -42,6 +42,7 @@ interface ReportState {
   expandedSections: Record<string, boolean>;
   isAddSectionModalOpen: boolean;
   draggedSectionId: string | null;
+  clipboardWidget: WidgetInstance | null;
 
   // Actions
   setReport: (report: ReportContent) => void;
@@ -69,6 +70,10 @@ interface ReportState {
   removeWidget: (sectionId: string, widgetId: string) => void;
   updateWidget: (sectionId: string, widgetId: string, updates: Partial<WidgetInstance>) => void;
   reorderWidgets: (sectionId: string, widgets: WidgetInstance[]) => void;
+  duplicateWidget: (sectionId: string, widgetId: string) => void;
+  copyWidget: (widget: WidgetInstance) => void;
+  pasteWidget: (sectionId: string) => void;
+  clearClipboardWidget: () => void;
   updateWidgetColumns: (sectionId: string, widgetId: string, columns: TableColumn[]) => void;
   updateWidgetRows: (sectionId: string, widgetId: string, rows: Record<string, any>[]) => void;
   updateWidgetData: (sectionId: string, widgetId: string, data: any) => void;
@@ -97,8 +102,18 @@ const initialState = {
   entityType: null,
   expandedSections: {},
   isAddSectionModalOpen: false,
-  draggedSectionId: null
+  draggedSectionId: null,
+  clipboardWidget: null
 };
+
+const generateWidgetInstanceId = () =>
+  `widget-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+
+const cloneWidgetForReuse = (widget: WidgetInstance): WidgetInstance => ({
+  ...widget,
+  instance_id: generateWidgetInstanceId(),
+  data: widget.data ? JSON.parse(JSON.stringify(widget.data)) : widget.data
+});
 
 export const useReportStore = create<ReportState>((set, get) => ({
   ...initialState,
@@ -321,6 +336,51 @@ export const useReportStore = create<ReportState>((set, get) => ({
       };
     }),
 
+  duplicateWidget: (sectionId, widgetId) =>
+    set((state) => {
+      if (!state.report) return {};
+      return {
+        report: {
+          ...state.report,
+          sections: state.report.sections.map((s) => {
+            if (s.section_id !== sectionId) return s;
+            const sourceIndex = s.widgets.findIndex((w) => w.instance_id === widgetId);
+            if (sourceIndex === -1) return s;
+            const clone = cloneWidgetForReuse(s.widgets[sourceIndex]);
+            const next = [...s.widgets];
+            next.splice(sourceIndex + 1, 0, clone);
+            return {
+              ...s,
+              widgets: next.map((w, i) => ({ ...w, order: i }))
+            };
+          })
+        }
+      };
+    }),
+
+  copyWidget: (widget) =>
+    set({ clipboardWidget: cloneWidgetForReuse(widget) }),
+
+  pasteWidget: (sectionId) =>
+    set((state) => {
+      if (!state.report || !state.clipboardWidget) return {};
+      const pasted = cloneWidgetForReuse(state.clipboardWidget);
+      return {
+        report: {
+          ...state.report,
+          sections: state.report.sections.map((s) => {
+            if (s.section_id !== sectionId) return s;
+            return {
+              ...s,
+              widgets: [...s.widgets, { ...pasted, order: s.widgets.length }]
+            };
+          })
+        }
+      };
+    }),
+
+  clearClipboardWidget: () => set({ clipboardWidget: null }),
+
   reorderWidgets: (sectionId, widgets) =>
     set((state) => {
       if (!state.report) return {};
@@ -469,5 +529,5 @@ export const useReportStore = create<ReportState>((set, get) => ({
       };
     }),
 
-  resetStore: () => set(initialState)
+  resetStore: () => set({ ...initialState, clipboardWidget: null })
 }));

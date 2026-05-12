@@ -1,7 +1,18 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { Settings2, Trash2, GripVertical, Settings, AlertTriangle } from "lucide-react";
+import {
+  Settings2,
+  Trash2,
+  GripVertical,
+  Settings,
+  AlertTriangle,
+  Copy,
+  CopyPlus,
+  ClipboardPaste,
+  X
+} from "lucide-react";
+import { useReportStore } from "@/store/report-store";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { DataSourceSelector } from "@/components/shared/data-source-selector";
 import { PieChartWidget } from "./pie-chart-widget";
@@ -75,6 +86,14 @@ export function WidgetManager({
   const [editingWidget, setEditingWidget] = useState<WidgetInstance | null>(null);
   const [deleteWidgetId, setDeleteWidgetId] = useState<string | null>(null);
   const [dataSourcePopoverOpen, setDataSourcePopoverOpen] = useState<string | null>(null);
+
+  const clipboardWidget = useReportStore((state) => state.clipboardWidget);
+  const duplicateWidget = useReportStore((state) => state.duplicateWidget);
+  const copyWidget = useReportStore((state) => state.copyWidget);
+  const pasteWidget = useReportStore((state) => state.pasteWidget);
+  const clearClipboardWidget = useReportStore((state) => state.clearClipboardWidget);
+
+  const clipboardWidgetLabel = clipboardWidget?.data?.title?.toString().trim() || clipboardWidget?.widget_type?.replace(/_/g, " ") || "widget";
 
   // Generate unique widget ID
   const generateWidgetId = useCallback(() => {
@@ -412,11 +431,42 @@ export function WidgetManager({
   return (
     <div className="space-y-4">
       {/* Section Header with Add Button */}
-      <div className="flex items-center justify-between border-t border-border pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
         <h4 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
           Widgets ({widgets.length})
         </h4>
-        <AddWidgetButton onClick={handleAddWidget} variant="compact" />
+        <div className="flex items-center gap-2">
+          {clipboardWidget && (
+            <div
+              className="group/paste flex items-center gap-0.5 rounded-md border border-dashed border-primary/50 bg-primary/[0.06] pl-1.5 pr-0.5 py-0.5 shadow-[0_0_0_1px_rgba(0,0,0,0)] transition-shadow hover:shadow-[0_0_0_3px_var(--tw-shadow-color)] hover:shadow-primary/15 animate-in fade-in-50 slide-in-from-right-2 duration-200"
+              role="region"
+              aria-label="Widget clipboard">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => pasteWidget(sectionId)}
+                className="h-7 gap-1.5 rounded-[5px] px-2 text-[11px] font-semibold uppercase tracking-wider text-primary hover:bg-primary/10"
+                title={`Paste copied widget (${clipboardWidgetLabel})`}>
+                <ClipboardPaste className="h-3.5 w-3.5 transition-transform group-hover/paste:-rotate-6" />
+                Paste
+                <span className="hidden max-w-[120px] truncate text-[10px] font-normal normal-case tracking-normal text-primary/70 sm:inline">
+                  · {clipboardWidgetLabel}
+                </span>
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={clearClipboardWidget}
+                className="h-6 w-6 rounded-[5px] text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+                title="Clear clipboard">
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+          <AddWidgetButton onClick={handleAddWidget} variant="compact" />
+        </div>
       </div>
 
       {/* Widget List */}
@@ -431,43 +481,89 @@ export function WidgetManager({
                 {/* Widget Content */}
                 <div className="p-4">{renderWidget(widget)}</div>
 
-                {/* Widget Footer with Data Source and Actions */}
-                <div className="flex w-full grid-cols-2 items-center justify-between overflow-clip border-t border-border px-4 py-2 lg:pr-14">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      {widget.data.data_source_id
+                {/* Widget Footer */}
+                <div className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-2 border-t border-border px-4 py-2">
+                  <span
+                    className="inline-flex min-w-0 max-w-[60%] items-center gap-1.5 text-[11px] font-medium tracking-wide text-muted-foreground"
+                    title={
+                      widget.data.data_source_id
                         ? `Data source: ${widget.data.data_source_id}`
+                        : "Manual data"
+                    }>
+                    <span
+                      className={cn(
+                        "h-1.5 w-1.5 shrink-0 rounded-full",
+                        widget.data.data_source_id
+                          ? "bg-primary shadow-[0_0_6px_var(--tw-shadow-color)] shadow-primary/60"
+                          : "bg-muted-foreground/50"
+                      )}
+                      aria-hidden
+                    />
+                    <span className="truncate">
+                      {widget.data.data_source_id
+                        ? widget.data.data_source_id
                         : "Manual data"}
                     </span>
-                    {/* Widget Type Changer - only show if data source has multiple compatible types */}
-                    {widget.data.data_source_id && onWidgetTypeChange && (
-                      <WidgetTypeChanger
-                        currentType={widget.widget_type}
-                        compatibleTypes={getCompatibleWidgetTypes(widget)}
-                        onTypeChange={(newType) => onWidgetTypeChange(widget.instance_id, newType)}
-                      />
-                    )}
-                  </div>
-                  <div className="flex min-w-60 items-center gap-1">
-                    <DataSourceSelector
-                      selectedDataSourceId={widget.data.data_source_id}
-                      onSelect={(dataSource) => {
-                        if (onWidgetDataSourceChange) {
-                          onWidgetDataSourceChange(widget.instance_id, dataSource);
-                        }
-                        setDataSourcePopoverOpen(null);
-                      }}
-                      filterByCategory={filterByCategory}
+                  </span>
+                  {widget.data.data_source_id && onWidgetTypeChange && (
+                    <WidgetTypeChanger
+                      currentType={widget.widget_type}
+                      compatibleTypes={getCompatibleWidgetTypes(widget)}
+                      onTypeChange={(newType) => onWidgetTypeChange(widget.instance_id, newType)}
                     />
-                    <Button
-                      type="button"
-                      size={"icon"}
-                      variant={"outline"}
-                      onClick={() => setDeleteWidgetId(widget.instance_id)}
-                      className="rounded p-1.5 text-red-400 transition-colors hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950"
-                      title="Remove widget">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  )}
+
+                  <div className="ml-auto flex min-w-0 shrink items-center gap-2">
+                    <div className="min-w-0 sm:min-w-80 max-w-[320px] [&_button]:w-full [&_button]:max-w-full [&_button>span]:truncate">
+                      <DataSourceSelector
+                        selectedDataSourceId={widget.data.data_source_id}
+                        onSelect={(dataSource) => {
+                          if (onWidgetDataSourceChange) {
+                            onWidgetDataSourceChange(widget.instance_id, dataSource);
+                          }
+                          setDataSourcePopoverOpen(null);
+                        }}
+                        filterByCategory={filterByCategory}
+                      />
+                    </div>
+                    <div className="inline-flex shrink-0 items-center gap-0.5 rounded-lg border border-border/70 bg-muted/30 p-0.5 shadow-sm">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => duplicateWidget(sectionId, widget.instance_id)}
+                        className="h-7 w-7 rounded-md text-muted-foreground transition-all hover:-translate-y-px hover:bg-primary/10 hover:text-primary focus-visible:ring-1 focus-visible:ring-primary/40"
+                        title="Duplicate widget below">
+                        <CopyPlus className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => copyWidget(widget)}
+                        className={cn(
+                          "h-7 w-7 rounded-md text-muted-foreground transition-all hover:-translate-y-px hover:bg-primary/10 hover:text-primary focus-visible:ring-1 focus-visible:ring-primary/40",
+                          clipboardWidget?.instance_id === widget.instance_id &&
+                            "bg-primary/15 text-primary ring-1 ring-primary/40 ring-inset hover:bg-primary/15"
+                        )}
+                        title={
+                          clipboardWidget?.instance_id === widget.instance_id
+                            ? "Copied — paste in any section"
+                            : "Copy widget to clipboard"
+                        }>
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <span className="mx-0.5 h-5 w-px bg-border/70" aria-hidden />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setDeleteWidgetId(widget.instance_id)}
+                        className="h-7 w-7 rounded-md text-muted-foreground transition-all hover:-translate-y-px hover:bg-red-500/10 hover:text-red-500 focus-visible:ring-1 focus-visible:ring-red-500/40 dark:hover:text-red-400"
+                        title="Remove widget">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
