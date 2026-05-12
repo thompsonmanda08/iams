@@ -34,12 +34,33 @@ const SEVERITY_COLORS: Record<string, string> = {
   CRITICAL: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
 };
 
+const SEVERITY_RAIL: Record<string, string> = {
+  LOW: "bg-blue-500/70 dark:bg-blue-400/70",
+  MEDIUM: "bg-amber-500/80 dark:bg-amber-400/80",
+  HIGH: "bg-orange-500/80 dark:bg-orange-400/80",
+  CRITICAL: "bg-red-500/90 dark:bg-red-400/90"
+};
+
+const COMPLIANCE_TONE: Record<string, string> = {
+  compliant:
+    "border-emerald-300/70 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
+  "non-compliant":
+    "border-rose-300/70 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
+  partial:
+    "border-amber-300/70 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+};
+
 const STATUS_ICONS: Record<string, any> = {
   OPEN: <AlertCircle className="h-4 w-4 text-red-500" />,
   IN_PROGRESS: <Clock className="h-4 w-4 text-blue-500" />,
   RESOLVED: <CheckCircle2 className="h-4 w-4 text-green-500" />,
   CLOSED: <CheckCircle2 className="h-4 w-4 text-gray-500" />
 };
+
+function complianceTone(status?: string | null) {
+  const key = String(status ?? "").toLowerCase();
+  return COMPLIANCE_TONE[key] ?? "border-border bg-muted/40 text-muted-foreground";
+}
 
 // Individual finding card component with evidence
 function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any) {
@@ -68,50 +89,112 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
   const canAssignAction =
     !isCompliant && ["COMPLETED", "APPROVED", "REJECTED", "CLOSED"].includes(finding.status);
 
+  // Strip leading "Conforms - " / "Conforms -" boilerplate from clause descriptions
+  // so the actual non-conformity language reads first.
+  const cleanClauseDescription = (raw?: string | null) =>
+    String(raw ?? "")
+      .trim()
+      .replace(/^conforms\s*-\s*/i, "");
+
+  const clauseDescription = cleanClauseDescription(
+    finding.clause_description || finding.category?.description
+  );
+  const categoryGroup =
+    finding.category?.display_name || finding.category_name || finding.clauseTitle;
+  const severityRail = SEVERITY_RAIL[finding.severity] ?? "bg-muted";
+  const compliancePct =
+    typeof finding.compliance_percentage === "number" ? finding.compliance_percentage : null;
+
   return (
     <>
     <Card
-      className="cursor-pointer gap-2 transition-shadow hover:shadow-md"
+      className="group relative cursor-pointer gap-2 overflow-hidden pl-1 transition-shadow hover:shadow-md"
       onClick={() => setDetailsDialogOpen(true)}>
-      <CardHeader className="">
+      {/* Severity rail */}
+      <div
+        aria-hidden
+        className={`absolute inset-y-0 left-0 w-1.5 ${severityRail}`}
+      />
+      <CardHeader className="pl-4">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <div className="mb-1 flex flex-wrap items-center gap-2">
-              {STATUS_ICONS[finding.status] && <div>{STATUS_ICONS[finding.status]}</div>}
-              <CardTitle className="text-base">
-                {finding.category?.display_name ||
-                  finding.category_name ||
-                  finding.clauseTitle ||
-                  "Unnamed Finding"}
+            {/* Eyebrow: category group + finding number */}
+            <div className="text-muted-foreground mb-2 flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em]">
+              {finding.framework && (
+                <span className="text-foreground/80">{finding.framework}</span>
+              )}
+              {categoryGroup && (
+                <>
+                  <span aria-hidden>·</span>
+                  <span className="truncate">{categoryGroup}</span>
+                </>
+              )}
+              {finding.finding_number && (
+                <>
+                  <span aria-hidden>·</span>
+                  <span className="border-border bg-muted/40 rounded-sm border px-1.5 py-0.5 font-mono text-[10px] tracking-wider">
+                    #{finding.finding_number}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Primary line: clause number + clause description as the title */}
+            <div className="flex items-baseline gap-3">
+              {finding.clause_number && (
+                <span className="text-primary font-mono text-2xl font-bold leading-none tabular-nums">
+                  {finding.clause_number}
+                </span>
+              )}
+              <CardTitle className="text-base font-semibold leading-snug">
+                {clauseDescription || categoryGroup || "Unnamed Finding"}
               </CardTitle>
+            </div>
+
+            {/* Chip row: severity / status / compliance / actions count */}
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              {STATUS_ICONS[finding.status] && (
+                <span className="inline-flex items-center">
+                  {STATUS_ICONS[finding.status]}
+                </span>
+              )}
               {finding.severity && (
                 <Badge className={`${SEVERITY_COLORS[finding.severity] || ""}`}>
                   {finding.severity}
                 </Badge>
               )}
-              {finding.status && <Badge variant="outline">{finding.status}</Badge>}
+              {finding.status && (
+                <Badge variant="outline" className="font-medium">
+                  {finding.status}
+                </Badge>
+              )}
+              {finding.compliance_status && (
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${complianceTone(
+                    finding.compliance_status
+                  )}`}>
+                  {finding.compliance_status}
+                  {compliancePct !== null && compliancePct > 0 && (
+                    <span className="opacity-70">· {compliancePct}%</span>
+                  )}
+                </span>
+              )}
               {actionsCount > 0 && (
                 <Badge variant="secondary">
                   {actionsCount} Action{actionsCount !== 1 ? "s" : ""}
                 </Badge>
               )}
             </div>
-            <div className="space-y-1">
-              {finding.finding_number && (
-                <CardDescription className="max-w-lg text-xs">
-                  {finding.category?.description} - Finding #{finding.finding_number}
-                </CardDescription>
-              )}
-            </div>
           </div>
-          <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+
+          <div className="flex shrink-0 flex-col gap-2" onClick={(e) => e.stopPropagation()}>
             {canAssignAction && (
-              <PermissionButton moduleCode={MODULE_CODES.AUDIT_WPS} action="can_assign"
+              <PermissionButton
+                moduleCode={MODULE_CODES.AUDIT_WPS}
+                action="can_assign"
                 size="sm"
                 variant="outline"
-                onClick={() => {
-  setAssignActionDialogOpen(true);
-}}
+                onClick={() => setAssignActionDialogOpen(true)}
                 className="gap-2">
                 <Plus className="mr-2 h-4 w-4" />
                 Assign Action
@@ -129,7 +212,7 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4 text-sm">
+      <CardContent className="space-y-4 pl-4 text-sm">
         {/* Main Finding Details */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
           {(
