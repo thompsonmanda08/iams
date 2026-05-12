@@ -812,10 +812,12 @@ export function ReportBuilder({
                 variant={"outline"}
                 size="icon"
                 onClick={handleSave}
-                disabled={isSaving}
+                disabled={isSaving || setActiveVersionMutation.isPending}
                 isLoading={isSaving}
                 className="sm:w-auto sm:px-3"
-                title="Save Draft">
+                title={
+                  setActiveVersionMutation.isPending ? "Switching version…" : "Save Draft"
+                }>
                 <Save className="h-4 w-4" />
                 <span className="hidden sm:inline md:hidden">Save</span>
                 <span className="hidden md:inline">Save Draft</span>
@@ -828,8 +830,13 @@ export function ReportBuilder({
                 variant={"outline"}
                 size="icon"
                 onClick={() => setShowSnapshotDialog(true)}
+                disabled={setActiveVersionMutation.isPending}
                 className="sm:w-auto sm:px-3"
-                title="Save as new version">
+                title={
+                  setActiveVersionMutation.isPending
+                    ? "Switching version…"
+                    : "Save as new version"
+                }>
                 <GitBranch className="h-4 w-4" />
                 <span className="hidden sm:inline md:hidden">Version</span>
                 <span className="hidden md:inline">Save as Version</span>
@@ -839,8 +846,9 @@ export function ReportBuilder({
               variant={"outline"}
               size="icon"
               onClick={() => setShowPreview(true)}
-              className="border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 sm:w-auto sm:px-3"
-              title="Preview">
+              disabled={setActiveVersionMutation.isPending}
+              className="border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-50 sm:w-auto sm:px-3"
+              title={setActiveVersionMutation.isPending ? "Switching version…" : "Preview"}>
               <Eye className="h-4 w-4" />
               <span className="hidden sm:inline">Preview</span>
             </Button>
@@ -848,11 +856,13 @@ export function ReportBuilder({
               moduleCode={MODULE_CODES.AUDIT_REPORTS}
               action="can_export"
               onClick={exportToPDF}
-              disabled={isExporting}
+              disabled={isExporting || setActiveVersionMutation.isPending}
               isLoading={isExporting}
               size="icon"
               className="sm:w-auto sm:px-3"
-              title="Export PDF">
+              title={
+                setActiveVersionMutation.isPending ? "Switching version…" : "Export PDF"
+              }>
               <Download className="h-4 w-4" />
               <span className="hidden sm:inline md:hidden">Export</span>
               <span className="hidden md:inline">Export PDF</span>
@@ -862,11 +872,15 @@ export function ReportBuilder({
                 moduleCode={MODULE_CODES.AUDIT_REPORTS}
                 action="can_edit"
                 onClick={handlePublish}
-                disabled={isPublishing}
+                disabled={isPublishing || setActiveVersionMutation.isPending}
                 isLoading={isPublishing}
                 size="icon"
                 className="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 sm:w-auto sm:px-3"
-                title="Submit for Approval">
+                title={
+                  setActiveVersionMutation.isPending
+                    ? "Switching version…"
+                    : "Submit for Approval"
+                }>
                 <Send className="h-4 w-4" />
                 <span className="hidden sm:inline md:hidden">Submit</span>
                 <span className="hidden md:inline">Submit for Approval</span>
