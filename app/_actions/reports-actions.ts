@@ -301,8 +301,19 @@ export async function updateReport(
     }
     const userRef = buildUserRef(session);
 
-    // Treat `data` as the new top-level state. Either bootstrap v1 or sync into versions[active].
-    const topLevel = ensureVersionedShape(data as ReportContent);
+    // Callers may pass either the raw ReportContent or the wrapper record
+    // { id, title, report_type, entity_id, entity_type, report_content, ... }.
+    // Detect the wrapper shape and operate on the nested content; otherwise treat
+    // `data` itself as the content.
+    const wrapper = data as any;
+    const hasWrapper =
+      wrapper && typeof wrapper === "object" && wrapper.report_content &&
+      typeof wrapper.report_content === "object";
+    const incomingContent: ReportContent = hasWrapper
+      ? (wrapper.report_content as ReportContent)
+      : (data as ReportContent);
+
+    const topLevel = ensureVersionedShape(incomingContent);
     let synced: ReportContent;
 
     if ((topLevel.versions ?? []).length === 0) {
@@ -323,14 +334,23 @@ export async function updateReport(
 
     const aggregateStatus = computeAggregateStatus(synced.versions ?? []);
 
+    const putBody = hasWrapper
+      ? {
+          ...wrapper,
+          report_content: synced,
+          status: aggregateStatus,
+          is_active: wrapper.is_active ?? true
+        }
+      : {
+          ...synced,
+          status: aggregateStatus,
+          is_active: (data as any).is_active ?? true
+        };
+
     const response = await authenticatedApiClient({
       url: `/api/v1/reports/${reportId}`,
       method: "PUT",
-      data: {
-        ...synced,
-        status: aggregateStatus,
-        is_active: data.is_active ?? true
-      }
+      data: putBody
     });
 
     revalidatePath("/dashboard/reports");
