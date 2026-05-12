@@ -184,6 +184,31 @@ export interface ReportContent {
   updated_at?: string;
   created_by?: ReportUserRef;
   updated_by?: ReportUserRef;
+  // NEW — versioning
+  current_version_number?: number;
+  versions?: ReportVersionSnapshot[];
+}
+
+export interface VersionEdit {
+  edited_at: string;
+  edited_by: ReportUserRef;
+  summary?: string;
+}
+
+export interface ReportVersionSnapshot {
+  version_number: number;
+  label?: string;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  title: string;
+  management_standard?: string;
+  branding: ReportBranding;
+  sections: ReportSection[];
+  pdf_url?: string;
+  snapshotted_at: string;
+  snapshotted_by: ReportUserRef;
+  published_at?: string;
+  published_by?: ReportUserRef;
+  edit_log: VersionEdit[];
 }
 
 /**
