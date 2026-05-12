@@ -12,6 +12,7 @@ import { AddSectionButton } from "./add-section-button";
 import { TableOfContents } from "./table-of-contents";
 import { PDFPreviewModal } from "./pdf-preview-modal";
 import { SnapshotVersionDialog } from "./snapshot-version-dialog";
+import { ReportSidebar } from "./report-sidebar";
 import { PDFDocument } from "./pdf-react/pdf-document";
 import { SelectField } from "@/components/ui/select-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
@@ -857,116 +858,8 @@ export function ReportBuilder({
       <div className="flex-1 py-4">
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar - Hidden on mobile, shown on large screens */}
-          <div className="sticky top-20 hidden space-y-4 self-start lg:col-span-3 lg:block">
-            <TableOfContents sections={report.sections || []} onItemClick={scrollToSection} />
-            <AddSectionButton variant="sidebar" />
-
-            {/* Report Info */}
-            <div className="border-border bg-card rounded-lg border p-4">
-              <h3 className="text-foreground mb-3 text-sm font-semibold">Report Details</h3>
-              <div className="space-y-2 text-sm">
-                {readOnlyType ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Type:</span>
-                    <p className="text-foreground font-medium">
-                      {reportTypeOptions.find((opt) => opt.value === getReportTypeValue())?.label ||
-                        getReportTypeValue()}
-                    </p>
-                  </div>
-                ) : (
-                  <SelectField
-                    label="Type"
-                    value={getReportTypeValue()}
-                    placeholder="Select report type..."
-                    onValueChange={(value) => {
-                      if (value === getReportTypeValue()) return;
-                      setPendingReportType(value);
-                      setConfirmDialogOpen(true);
-                    }}
-                    options={reportTypeOptions as any}
-                    className="min-w-full"
-                  />
-                )}
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Source {getEntityLabel()}:</span>
-                  <p className="text-foreground font-medium">{entity.title || "-"}</p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Status:</span>
-                  <StatusBadge status={report.status as string} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Sections:</span>
-                  <p className="text-foreground font-medium">{report.sections?.length || 0}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Version:</span>
-                  <Badge variant={"default"} className="font-medium">
-                    {report.version}
-                  </Badge>
-                </div>
-                <div>
-                  <span className="text-muted-foreground text-xs">Created</span>
-                  <p className="text-foreground text-sm font-medium">
-                    {formatDate(report?.created_at || new Date())}
-                    {report.created_by && (
-                      <span className="text-muted-foreground font-normal">
-                        {" "}
-                        by {report.created_by.name}
-                      </span>
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground text-xs">Last Modified</span>
-                  <p className="text-foreground text-sm font-medium">
-                    {report?.updated_at
-                      ? formatDistanceToNow(report?.updated_at || new Date(), {
-                          addSuffix: true
-                        })
-                      : "--"}
-                    {report.updated_by && (
-                      <span className="text-muted-foreground font-normal">
-                        {" "}
-                        by {report.updated_by.name}
-                      </span>
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Section Type Legend */}
-            <div className="border-border bg-card rounded-lg border p-4">
-              <h3 className="text-foreground mb-3 text-sm font-semibold">Section Types</h3>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-950/30" />
-                  <span className="text-muted-foreground">Cover Page</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-950/30" />
-                  <span className="text-muted-foreground">Text Content</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-950/30" />
-                  <span className="text-muted-foreground">Text + Widgets</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30" />
-                  <span className="text-muted-foreground">Findings Selector</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-indigo-300 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-950/30" />
-                  <span className="text-muted-foreground">Compliance Findings</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-cyan-300 bg-cyan-50 dark:border-cyan-700 dark:bg-cyan-950/30" />
-                  <span className="text-muted-foreground">Dynamic Form</span>
-                </div>
-              </div>
-            </div>
+          <div className="sticky top-20 hidden self-start lg:col-span-3 lg:block">
+            {report?.report_id && <ReportSidebar reportId={report.report_id} />}
           </div>
 
           {/* Main Editor */}
