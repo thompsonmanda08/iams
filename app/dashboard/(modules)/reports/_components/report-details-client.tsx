@@ -310,7 +310,11 @@ export function ReportDetailsClient({
         <ReportBuilder entity={entity} entityType={entityType} readOnlyType />
       </TabsContent>
       <TabsContent value="history" className="mt-4">
-        <ReportVersionHistory reportId={reportId} versions={versions} />
+        <ReportVersionHistory
+          reportId={reportId}
+          versions={versions}
+          activeVersionNumber={liveContent?.current_version_number}
+        />
       </TabsContent>
     </Tabs>
   );

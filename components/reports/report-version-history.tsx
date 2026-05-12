@@ -2,26 +2,32 @@
 
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Download, Eye, FileText, History, Pencil, Send } from "lucide-react";
+import { CheckCircle2, Download, Eye, FileText, History, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
-import { usePublishVersion } from "@/hooks/use-report-queries";
+import { usePublishVersion, useSetActiveVersion } from "@/hooks/use-report-queries";
 import type { ReportVersionSnapshot } from "@/lib/types/report-types";
 import { VersionViewerDialog } from "./version-viewer-dialog";
 
 interface ReportVersionHistoryProps {
   reportId: string;
   versions: ReportVersionSnapshot[];
+  activeVersionNumber?: number;
 }
 
-export function ReportVersionHistory({ reportId, versions }: ReportVersionHistoryProps) {
+export function ReportVersionHistory({
+  reportId,
+  versions,
+  activeVersionNumber,
+}: ReportVersionHistoryProps) {
   const [openVersion, setOpenVersion] = useState<{
     version: ReportVersionSnapshot;
     mode: "view" | "edit";
   } | null>(null);
   const publish = usePublishVersion(reportId);
+  const setActive = useSetActiveVersion(reportId);
 
   const sorted = useMemo(
     () => [...versions].sort((a, b) => b.version_number - a.version_number),
@@ -56,6 +62,11 @@ export function ReportVersionHistory({ reportId, versions }: ReportVersionHistor
                 {v.label && (
                   <span className="text-muted-foreground truncate text-sm">— {v.label}</span>
                 )}
+                {v.version_number === activeVersionNumber && (
+                  <Badge variant="default" className="bg-blue-600 text-xs hover:bg-blue-700">
+                    Active
+                  </Badge>
+                )}
                 <StatusBadge status={v.status} />
                 {v.edit_log.length > 0 && (
                   <Badge variant="secondary" className="text-xs">
@@ -79,10 +90,17 @@ export function ReportVersionHistory({ reportId, versions }: ReportVersionHistor
               <Button
                 size="icon"
                 variant="ghost"
-                title="Edit"
-                onClick={() => setOpenVersion({ version: v, mode: "edit" })}
+                title={v.version_number === activeVersionNumber ? "Active" : "Set as active"}
+                disabled={setActive.isPending || v.version_number === activeVersionNumber}
+                onClick={() => setActive.mutate(v.version_number)}
               >
-                <Pencil className="h-4 w-4" />
+                <CheckCircle2
+                  className={
+                    v.version_number === activeVersionNumber
+                      ? "h-4 w-4 text-blue-600"
+                      : "h-4 w-4 text-gray-400"
+                  }
+                />
               </Button>
               {v.pdf_url && (
                 <Button asChild size="icon" variant="ghost" title="Download PDF">
