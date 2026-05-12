@@ -344,6 +344,40 @@ export async function duplicateReport(reportId: string): Promise<APIResponse> {
   }
 }
 
+/**
+ * Get a single version snapshot from a report
+ */
+export async function getReportVersion(
+  reportId: string,
+  versionNumber: number
+): Promise<APIResponse> {
+  if (!reportId) {
+    return handleBadRequest("Report ID is required");
+  }
+
+  try {
+    const reportRes = await getReport(reportId);
+    if (!reportRes.success || !reportRes.data?.data?.report_content) {
+      return handleBadRequest("Report not found");
+    }
+
+    const versions = reportRes.data.data.report_content.versions ?? [];
+    const snapshot = versions.find((v: any) => v.version_number === versionNumber);
+
+    if (!snapshot) {
+      return handleBadRequest(`Version ${versionNumber} not found`);
+    }
+
+    return successResponse(snapshot);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | GET REPORT VERSION",
+      `/api/v1/reports/${reportId}#v${versionNumber}`
+    );
+  }
+}
+
 // ============================================================================
 // DATA SOURCES
 // ============================================================================
