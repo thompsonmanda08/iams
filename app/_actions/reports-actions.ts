@@ -122,15 +122,23 @@ export async function getDashboardStats(): Promise<APIResponse> {
   }
 }
 
-// Internal helper: build a ReportUserRef from the current session object
-function buildUserRef(session: any): ReportUserRef | null {
+// Internal helper: build a ReportUserRef from the current session object.
+// Always returns a non-null ref — falls back to a sentinel when session details
+// are sparse so saves/snapshots/publishes never get blocked solely on missing
+// user metadata. The edit_log entry still records something traceable.
+function buildUserRef(session: any): ReportUserRef {
   const user = session?.user;
-  if (!user && !session?.user_id) return null;
   const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim();
   return {
-    user_id: user?.id ?? session?.user_id ?? "",
-    name: fullName || user?.username || user?.email || "Unknown User",
-    email: user?.email ?? ""
+    user_id: user?.id ?? session?.user_id ?? session?.userId ?? "",
+    name:
+      fullName ||
+      user?.username ||
+      user?.email ||
+      session?.username ||
+      session?.email ||
+      "Unknown User",
+    email: user?.email ?? session?.email ?? ""
   };
 }
 
@@ -292,9 +300,6 @@ export async function updateReport(
       return handleBadRequest("Session required to save");
     }
     const userRef = buildUserRef(session);
-    if (!userRef) {
-      return handleBadRequest("Session user details unavailable");
-    }
 
     // Treat `data` as the new top-level state. Either bootstrap v1 or sync into versions[active].
     const topLevel = ensureVersionedShape(data as ReportContent);
@@ -467,9 +472,6 @@ export async function snapshotReportVersion(
       return handleBadRequest("Session required to snapshot");
     }
     const userRef = buildUserRef(session);
-    if (!userRef) {
-      return handleBadRequest("Session user details unavailable");
-    }
 
     const current = ensureVersionedShape(reportRes.data.data.report_content);
     const newSnapshot = buildSnapshotFromCurrent(current, userRef, label);
@@ -534,9 +536,6 @@ export async function updateReportVersion(
       return handleBadRequest("Session required to edit version");
     }
     const userRef = buildUserRef(session);
-    if (!userRef) {
-      return handleBadRequest("Session user details unavailable");
-    }
 
     const current = ensureVersionedShape(reportRes.data.data.report_content);
     const versions = current.versions ?? [];
@@ -599,9 +598,6 @@ export async function publishReportVersion(
       return handleBadRequest("Session required to publish version");
     }
     const userRef = buildUserRef(session);
-    if (!userRef) {
-      return handleBadRequest("Session user details unavailable");
-    }
 
     const current = ensureVersionedShape(reportRes.data.data.report_content);
     const versions = current.versions ?? [];
