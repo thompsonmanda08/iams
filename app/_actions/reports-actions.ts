@@ -18,6 +18,15 @@ import {
   normalizeManagementStandard,
   getTemplateForStandard
 } from "@/components/reports/report-templates";
+import {
+  buildSnapshotFromCurrent,
+  computeAggregateStatus,
+  findVersionIndex,
+  applyVersionPatch
+} from "@/lib/config/version-helpers";
+import { ensureVersionedShape } from "@/lib/config/ensure-versioned-shape";
+import { verifySession } from "@/lib/session";
+import type { ReportUserRef } from "@/lib/types/report-types";
 import type { DataSource } from "@/lib/types/report-types";
 
 // ============================================================================
@@ -109,6 +118,18 @@ export async function getDashboardStats(): Promise<APIResponse> {
   } catch (error: any) {
     return handleError(error, "GET | GET DASHBOARD STATS", "/api/v1/dashboard/summary");
   }
+}
+
+// Internal helper: build a ReportUserRef from the current session object
+function buildUserRef(session: any): ReportUserRef | null {
+  const user = session?.user;
+  if (!user && !session?.user_id) return null;
+  const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim();
+  return {
+    user_id: user?.id ?? session?.user_id ?? "",
+    name: fullName || user?.username || user?.email || "Unknown User",
+    email: user?.email ?? ""
+  };
 }
 
 // ============================================================================
@@ -374,6 +395,65 @@ export async function getReportVersion(
       error,
       "GET | GET REPORT VERSION",
       `/api/v1/reports/${reportId}#v${versionNumber}`
+    );
+  }
+}
+
+/**
+ * Create a new version snapshot of the current draft
+ */
+export async function snapshotReportVersion(
+  reportId: string,
+  label?: string
+): Promise<APIResponse> {
+  if (!reportId) {
+    return handleBadRequest("Report ID is required");
+  }
+
+  try {
+    const reportRes = await getReport(reportId);
+    if (!reportRes.success || !reportRes.data?.data?.report_content) {
+      return handleBadRequest("Report not found");
+    }
+
+    const { isAuthenticated, session } = await verifySession();
+    if (!isAuthenticated) {
+      return handleBadRequest("Session required to snapshot");
+    }
+    const userRef = buildUserRef(session);
+    if (!userRef) {
+      return handleBadRequest("Session user details unavailable");
+    }
+
+    const current = ensureVersionedShape(reportRes.data.data.report_content);
+    const newSnapshot = buildSnapshotFromCurrent(current, userRef, label);
+
+    const updatedVersions = [...(current.versions ?? []), newSnapshot];
+    const updatedContent = {
+      ...current,
+      versions: updatedVersions,
+      current_version_number: newSnapshot.version_number
+    };
+
+    const aggregateStatus = computeAggregateStatus(updatedVersions);
+
+    const response = await authenticatedApiClient({
+      url: `/api/v1/reports/${reportId}`,
+      method: "PUT",
+      data: {
+        report_content: updatedContent,
+        status: aggregateStatus,
+        is_active: true
+      }
+    });
+
+    revalidatePath(`/dashboard/reports/${reportId}`);
+    return successResponse(response?.data, `Snapshot v${newSnapshot.version_number} created`);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | SNAPSHOT REPORT VERSION",
+      `/api/v1/reports/${reportId}#snapshot`
     );
   }
 }
