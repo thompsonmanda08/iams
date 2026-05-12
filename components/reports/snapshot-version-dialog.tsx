@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSnapshotVersion } from "@/hooks/use-report-queries";
+import { useReportStore } from "@/store/report-store";
 
 interface SnapshotVersionDialogProps {
   reportId: string;
@@ -30,15 +31,19 @@ export function SnapshotVersionDialog({
 }: SnapshotVersionDialogProps) {
   const [label, setLabel] = useState("");
   const snapshot = useSnapshotVersion(reportId);
+  const report = useReportStore((state) => state.report);
 
   const handleConfirm = () => {
-    snapshot.mutate(label.trim() || undefined, {
-      onSuccess: () => {
-        setLabel("");
-        onOpenChange(false);
-        onSaved?.();
+    snapshot.mutate(
+      { label: label.trim() || undefined, draft: report ?? undefined },
+      {
+        onSuccess: () => {
+          setLabel("");
+          onOpenChange(false);
+          onSaved?.();
+        }
       }
-    });
+    );
   };
 
   return (

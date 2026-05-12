@@ -462,8 +462,10 @@ export function useMultipleWidgetData(
 export function useSnapshotVersion(reportId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (label?: string) => {
-      const result = await snapshotReportVersion(reportId, label);
+    mutationFn: async (args: { label?: string; draft?: ReportContent } | string | undefined) => {
+      const label = typeof args === "string" || args === undefined ? args : args.label;
+      const draft = typeof args === "string" || args === undefined ? undefined : args.draft;
+      const result = await snapshotReportVersion(reportId, label, draft);
       if (!result.success) throw new Error(result.message || "Failed to snapshot");
       return result.data;
     },
