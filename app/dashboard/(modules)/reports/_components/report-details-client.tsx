@@ -22,6 +22,7 @@ import { useSession } from "@/store/session-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReportVersionHistory } from "@/components/reports/report-version-history";
 import { ensureVersionedShape } from "@/lib/config/ensure-versioned-shape";
+import { useReport } from "@/hooks/use-report-queries";
 
 interface ReportDetailsClientProps {
   reportId: string;
@@ -222,11 +223,16 @@ export function ReportDetailsClient({
     return report;
   }, [initialReport, entity.management_standard, reportId, reportStatus]);
 
+  // Live versions: subscribe to the report query so the History tab updates
+  // immediately after snapshot/edit/publish mutations invalidate the cache.
+  // Falls back to the SSR `initialReport` until the first client fetch resolves.
+  const liveReportQuery = useReport(reportId);
+  const liveContent =
+    (liveReportQuery.data?.data?.report_content as ReportContent | undefined) ?? initialReport;
   const versions = useMemo(() => {
-    if (!initialReport) return [];
-    const normalized = ensureVersionedShape(initialReport);
-    return normalized.versions ?? [];
-  }, [initialReport]);
+    if (!liveContent) return [];
+    return ensureVersionedShape(liveContent).versions ?? [];
+  }, [liveContent]);
 
   // Dynamically fetch data for widgets that have data_source_id
   const { data: widgetDataMap } = useWidgetDataPopulation(
