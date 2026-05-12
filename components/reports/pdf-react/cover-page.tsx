@@ -2,6 +2,7 @@ import React from "react";
 import { Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { ReportContent } from "@/lib/types/report-types";
 import { useSession } from "@/store/session-store";
+import { formatDate } from "@/lib/utils/date-format";
 
 // Shared styles
 const sharedStyles = StyleSheet.create({
@@ -262,12 +263,7 @@ export const DetailedCoverPage: React.FC<CoverPageProps> = ({
             {/* Right Footer */}
             <View style={{ textAlign: "right" }}>
               <Text style={{ fontSize: 9, color: "#64748b" }}>
-                Generated:{" "}
-                {new Date().toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric"
-                })}
+                Generated: {formatDate(new Date())}
               </Text>
             </View>
           </View>

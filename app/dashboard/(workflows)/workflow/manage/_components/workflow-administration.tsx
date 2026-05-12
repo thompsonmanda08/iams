@@ -25,6 +25,7 @@ import {
   EmptyTitle
 } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface WorkflowAdministrationProps {
   workflow: {
@@ -165,7 +166,7 @@ export const WorkflowAdministration = ({
                               </Badge>
                             </td>
                             <td className="text-muted-foreground px-4 py-2 text-xs">
-                              {new Date(instance.created_at).toLocaleDateString()}
+                              {formatDate(instance.created_at)}
                             </td>
                             <td className="px-4 py-2">
                               <Button variant="ghost" size="sm">

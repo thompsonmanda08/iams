@@ -24,6 +24,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { cn, notify } from "@/lib/utils";
 import { getDepartments } from "@/app/_actions/config-actions";
 import { updateRiskRegister } from "@/app/_actions/risk-module-actions";
@@ -210,7 +211,7 @@ export default function EditRiskRegisterDialog({
                       )}
                       disabled={isLoading}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "PPP") : "Pick a date"}
+                      {startDate ? formatDate(startDate) : "Pick a date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -238,7 +239,7 @@ export default function EditRiskRegisterDialog({
                       )}
                       disabled={isLoading || !startDate}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dueDate ? format(dueDate, "PPP") : "Pick a date"}
+                      {dueDate ? formatDate(dueDate) : "Pick a date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">

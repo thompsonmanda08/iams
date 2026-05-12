@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -230,7 +230,7 @@ export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
                         <p className="text-sm font-medium">{memo.subject || "Untitled Memo"}</p>
                         <p className="text-muted-foreground text-xs">
                           {auditPlan.status === "IN_REVIEW" || auditPlan.status === "APPROVED"
-                            ? `Sent on ${format(new Date(memo.sent_at || auditPlan.updated_at), "MMM d, yyyy")}`
+                            ? `Sent on ${formatDate(memo.sent_at || auditPlan.updated_at)}`
                             : "Draft - Not sent yet"}
                         </p>
                       </div>
@@ -538,8 +538,8 @@ export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
                     {item.start_date && item.end_date && (
                       <div className="mt-3 border-t pt-3 text-xs">
                         <p className="text-muted-foreground">
-                          {format(new Date(item.start_date), "MMM d, yyyy")} -{" "}
-                          {format(new Date(item.end_date), "MMM d, yyyy")}
+                          {formatDate(item.start_date)} -{" "}
+                          {formatDate(item.end_date)}
                         </p>
                       </div>
                     )}

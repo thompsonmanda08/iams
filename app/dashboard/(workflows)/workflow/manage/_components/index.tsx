@@ -47,6 +47,7 @@ import { QUERY_KEYS } from "@/lib/constants";
 import { useWorkflowMutations } from "@/hooks/use-workflow-mutations";
 import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface WorkflowClientProps {
   initialWorkflows: WorkflowItem[];
@@ -612,17 +613,13 @@ function WorkflowCard({
                 <div>
                   <div className="font-semibold text-slate-600 dark:text-slate-400">Created</div>
                   <div className="mt-1 text-slate-900 dark:text-slate-300">
-                    {workflow.created_at
-                      ? new Date(workflow.created_at).toLocaleDateString()
-                      : "N/A"}
+                    {formatDate(workflow.created_at)}
                   </div>
                 </div>
                 <div>
                   <div className="font-semibold text-slate-600 dark:text-slate-400">Updated</div>
                   <div className="mt-1 text-slate-900 dark:text-slate-300">
-                    {workflow.updated_at
-                      ? new Date(workflow.updated_at).toLocaleDateString()
-                      : "N/A"}
+                    {formatDate(workflow.updated_at)}
                   </div>
                 </div>
               </div>

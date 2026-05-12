@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import type { AnnualPlanItemWithDetails, UniverseItem, KRIColor } from "@/lib/types/audit-types";
 import { format, formatDistanceToNow } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Link from "next/link";
 import { ConfirmationModal } from "@/components/confirmation-modal";
@@ -331,7 +332,7 @@ export function AnnualPlanItems({
                         <TooltipContent>
                           <p className="text-xs">
                             {item.engagement_date
-                              ? `Start: ${format(new Date(item.engagement_date), "PPPP")}`
+                              ? `Start: ${formatDate(item.engagement_date)}`
                               : "No start date"}
                           </p>
                         </TooltipContent>
@@ -349,7 +350,7 @@ export function AnnualPlanItems({
                         <TooltipContent>
                           <p className="text-xs">
                             {item.engagement_end_date
-                              ? `End: ${format(new Date(item.engagement_end_date), "PPPP")}`
+                              ? `End: ${formatDate(item.engagement_end_date)}`
                               : "No end date"}
                           </p>
                         </TooltipContent>

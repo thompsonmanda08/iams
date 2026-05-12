@@ -38,7 +38,7 @@ import {
   useSubmitAnnualAuditPlanForApproval
 } from "@/hooks/use-audit-query-data";
 import Loader from "@/components/ui/loader";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
@@ -290,7 +290,7 @@ export default function AuditAnnualPlan({
                           <div className="flex flex-col gap-1">
                             <span className="font-medium">By: {item.created_by_name}</span>
                             <span className="font-mono text-sm">
-                              {format(new Date(item.created_at), "MMM dd, yyyy")}
+                              {formatDate(item.created_at)}
                             </span>
                           </div>
                         </TableCell>
@@ -298,7 +298,7 @@ export default function AuditAnnualPlan({
                           <div className="flex flex-col gap-1">
                             <span className="font-medium">By: {item.updated_by_name}</span>
                             <span className="font-mono text-sm">
-                              Date: {format(new Date(item.updated_at), "MMM dd, yyyy")}
+                              Date: {formatDate(item.updated_at)}
                             </span>
                           </div>
                         </TableCell>

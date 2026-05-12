@@ -18,6 +18,7 @@ import {
   Filter
 } from "lucide-react";
 import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 import {
@@ -134,13 +135,13 @@ export function EffectsReport() {
                     {dateRange?.from ? (
                       <div className="flex items-center gap-1.5 truncate text-sm">
                         <span className="font-medium">
-                          {format(dateRange.from, "MMM dd, yyyy")}
+                          {formatDate(dateRange.from)}
                         </span>
                         {dateRange.to && (
                           <>
                             <ArrowRight className="text-muted-foreground h-3 w-3 flex-shrink-0" />
                             <span className="font-medium">
-                              {format(dateRange.to, "MMM dd, yyyy")}
+                              {formatDate(dateRange.to)}
                             </span>
                           </>
                         )}

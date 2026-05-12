@@ -1,6 +1,6 @@
 "use client";
 
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import {
   Dialog,
   DialogContent,
@@ -118,7 +118,7 @@ export function FindingDetailsDialog({ open, onOpenChange, finding }: FindingDet
                   <div>
                     <p className="text-muted-foreground mb-1 text-xs font-medium">Due Date</p>
                     <p className="text-sm">
-                      {format(new Date(finding.due_date), "MMM d, yyyy")}
+                      {formatDate(finding.due_date)}
                     </p>
                   </div>
                 )}
@@ -211,7 +211,7 @@ export function FindingDetailsDialog({ open, onOpenChange, finding }: FindingDet
                         <p className="text-muted-foreground text-xs">
                           Collected{" "}
                           {item.collection_date
-                            ? format(new Date(item.collection_date), "MMM d, yyyy")
+                            ? formatDate(item.collection_date)
                             : "Unknown"}
                         </p>
                         {item.notes && (

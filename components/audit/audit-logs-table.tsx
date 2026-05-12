@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, User, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface AuditLog {
   id: string;
@@ -135,7 +136,7 @@ export function AuditLogsTable({ logs, isLoading }: AuditLogsTableProps) {
                 <TableCell>
                   <div className="space-y-1">
                     <p className="text-sm font-medium">
-                      {format(new Date(log.timestamp), "MMM d, yyyy")}
+                      {formatDate(log.timestamp)}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(log.timestamp), "h:mm a")}

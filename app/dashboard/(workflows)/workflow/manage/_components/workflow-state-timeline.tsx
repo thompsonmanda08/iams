@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AlertCircle } from "lucide-react";
+import { formatDateTime } from "@/lib/utils/date-format";
 
 interface WorkflowStateTimelineProps {
   instanceId: string;
@@ -76,12 +77,7 @@ export const WorkflowStateTimeline = ({
                       </Badge>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(record.executed_at).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
+                      {formatDateTime(record.executed_at)}
                     </span>
                   </div>
 

@@ -16,6 +16,7 @@ import { CalendarIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/utils/date-format";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -128,10 +129,10 @@ export default function CalendarDateRangePicker({
                     {date?.from ? (
                       date.to ? (
                         <>
-                          {format(date.from, "dd MMM yyyy")} - {format(date.to, "dd MMM yyyy")}
+                          {formatDate(date.from)} - {formatDate(date.to)}
                         </>
                       ) : (
-                        format(date.from, "dd MMM yyyy")
+                        formatDate(date.from)
                       )
                     ) : (
                       <span>Select date range</span>
@@ -152,10 +153,10 @@ export default function CalendarDateRangePicker({
               {date?.from ? (
                 date.to ? (
                   <>
-                    {format(date.from, "dd MMM yyyy")} - {format(date.to, "dd MMM yyyy")}
+                    {formatDate(date.from)} - {formatDate(date.to)}
                   </>
                 ) : (
-                  format(date.from, "dd MMM yyyy")
+                  formatDate(date.from)
                 )
               ) : (
                 <span>Select date range</span>

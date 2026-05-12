@@ -17,6 +17,7 @@ import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 import { PermissionButton } from "@/components/ui/permission-button";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface FindingsListProps {
   findings: any[];
@@ -241,7 +242,7 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
               {finding.due_date && (
                 <div className="ml-auto">
                   <p className="text-primary mb-1 text-right text-sm font-semibold">Due Date</p>
-                  <Badge variant="outline">{new Date(finding.due_date).toLocaleDateString()}</Badge>
+                  <Badge variant="outline">{formatDate(finding.due_date)}</Badge>
                 </div>
               )}
             </div>

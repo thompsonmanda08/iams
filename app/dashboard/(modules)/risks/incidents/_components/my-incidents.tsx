@@ -45,6 +45,7 @@ import {
   Send
 } from "lucide-react";
 import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 import { deleteIncident, getIncidents } from "@/app/_actions/incident-actions";
@@ -227,13 +228,13 @@ export function MyIncidents() {
                     {dateRange?.from ? (
                       <div className="flex items-center gap-1.5 truncate text-sm">
                         <span className="font-medium">
-                          {format(dateRange.from, "MMM dd, yyyy")}
+                          {formatDate(dateRange.from)}
                         </span>
                         {dateRange.to && (
                           <>
                             <ArrowRight className="text-muted-foreground h-3 w-3 flex-shrink-0" />
                             <span className="font-medium">
-                              {format(dateRange.to, "MMM dd, yyyy")}
+                              {formatDate(dateRange.to)}
                             </span>
                           </>
                         )}
@@ -401,7 +402,7 @@ export function MyIncidents() {
                         {(paginationData.page - 1) * paginationData.page_size + index + 1}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        {format(new Date(item?.incident?.incident_date), "MMM dd, yyyy")}
+                        {formatDate(item?.incident?.incident_date)}
                       </TableCell>
                       <TableCell className="flex flex-col gap-y-2">
                         <span>{item?.department?.name}</span>
@@ -421,7 +422,7 @@ export function MyIncidents() {
                         {`${item?.responsible_person?.first_name} ${item?.responsible_person?.last_name}`}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        {format(new Date(item?.incident?.due_date), "MMM dd, yyyy")}
+                        {formatDate(item?.incident?.due_date)}
                       </TableCell>
                       <TableCell>
                         <StatusBadge status={item?.incident?.status} />
@@ -502,13 +503,13 @@ export function MyIncidents() {
                   <div>
                     <Label className="text-muted-foreground text-xs">Incident Date</Label>
                     <p className="font-medium">
-                      {format(new Date(selectedIncident.incident.incident_date), "PPP")}
+                      {formatDate(selectedIncident.incident.incident_date)}
                     </p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground text-xs">Discovery Date</Label>
                     <p className="font-medium">
-                      {format(new Date(selectedIncident.incident.discovery_date), "PPP")}
+                      {formatDate(selectedIncident.incident.discovery_date)}
                     </p>
                   </div>
                   <div>
@@ -595,7 +596,7 @@ export function MyIncidents() {
                   <div>
                     <Label className="text-muted-foreground text-xs">Created Date</Label>
                     <p className="font-medium">
-                      {format(new Date(selectedIncident.incident.created_at), "PPP")}
+                      {formatDate(selectedIncident.incident.created_at)}
                     </p>
                   </div>
                 </div>
@@ -612,7 +613,7 @@ export function MyIncidents() {
                   <div>
                     <Label className="text-muted-foreground text-xs">Due Date</Label>
                     <p className="font-medium">
-                      {format(new Date(selectedIncident.incident.due_date), "PPP")}
+                      {formatDate(selectedIncident.incident.due_date)}
                     </p>
                   </div>
                 </div>

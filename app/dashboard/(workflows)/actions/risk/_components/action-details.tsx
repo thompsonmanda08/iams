@@ -25,8 +25,8 @@ import {
   Logs,
   ClipboardList
 } from "lucide-react";
-import { format } from "date-fns";
 import { cn, notify } from "@/lib/utils";
+import { formatDate } from "@/lib/utils/date-format";
 import BackButton from "@/components/back-button";
 import { ActionLog } from "../[id]/_components/action-log";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -167,16 +167,6 @@ export function ActionDetails({ action, actionLogs, pagination }: ActionDetailsP
         return "bg-red-100 text-red-800 border-red-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  // Format date safely
-  const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString || dateString === "0001-01-01T00:00:00Z") return "Not set";
-    try {
-      return format(new Date(dateString), "MMMM dd, yyyy");
-    } catch {
-      return "Invalid date";
     }
   };
 

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { formatDate } from "@/lib/utils/date-format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit2, Trash2, Loader2, Columns3Cog } from "lucide-react";
@@ -107,14 +108,6 @@ export function ResidualRiskRatingList() {
       page: updates.page || prev.page,
       page_size: updates.page_size || prev.page_size
     }));
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric"
-    });
   };
 
   const handleDeleteClick = (rating: ResidualRiskRating) => {

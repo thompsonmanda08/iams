@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import {
   Dialog,
   DialogContent,
@@ -601,7 +601,7 @@ export function FindingActionDetailsDialog({
                           <p className="text-muted-foreground mb-1 text-xs font-medium">Due Date</p>
                           <p className="text-sm">
                             {action.due_date
-                              ? format(new Date(action.due_date), "MMM d, yyyy")
+                              ? formatDate(action.due_date)
                               : "Not set"}
                           </p>
                         </div>
@@ -610,7 +610,7 @@ export function FindingActionDetailsDialog({
                           <p className="text-muted-foreground mb-1 text-xs font-medium">Created</p>
                           <p className="text-sm">
                             {action.created_at
-                              ? format(new Date(action.created_at), "MMM d, yyyy")
+                              ? formatDate(action.created_at)
                               : "Unknown"}
                           </p>
                         </div>
@@ -748,7 +748,7 @@ export function FindingActionDetailsDialog({
                                       <p className="text-muted-foreground text-xs">
                                         Collected{" "}
                                         {item.collection_date
-                                          ? format(new Date(item.collection_date), "MMM d, yyyy")
+                                          ? formatDate(item.collection_date)
                                           : "Unknown"}
                                       </p>
                                       {item.notes && (
@@ -848,7 +848,7 @@ export function FindingActionDetailsDialog({
                                 <p className="text-muted-foreground text-xs">
                                   Submitted{" "}
                                   {item.submitted_at
-                                    ? format(new Date(item.submitted_at), "MMM d, yyyy")
+                                    ? formatDate(item.submitted_at)
                                     : "Unknown"}
                                 </p>
                               </div>
@@ -919,7 +919,7 @@ export function FindingActionDetailsDialog({
                                 )}
                                 <p className="text-muted-foreground text-xs">
                                   {review.created_at
-                                    ? format(new Date(review.created_at), "MMM d, yyyy")
+                                    ? formatDate(review.created_at)
                                     : "Unknown"}
                                 </p>
                               </div>

@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trash2, Pencil, View, ClipboardCheck, Plus } from "lucide-react";
 import { CreateWorkpaperTemplateDialog } from "./create-workpaper-dialog";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import Link from "next/link";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { deleteWorkingPaperTemplate } from "@/app/_actions/audit-module-actions";
@@ -222,9 +222,7 @@ export function WorkpaperTemplatesTable({
               </TableCell>
               <TableCell>
                 <span className="text-sm">
-                  {template.updated_at
-                    ? format(new Date(template.updated_at), "MMM d, yyyy")
-                    : "N/A"}
+                  {formatDate(template.updated_at)}
                 </span>
               </TableCell>
               <TableCell>

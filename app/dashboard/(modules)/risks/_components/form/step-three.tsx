@@ -8,7 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { RiskResponse, StepThreeData, User } from "@/lib/types/risk-type";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 
 
 interface StepThreeProps {
@@ -97,7 +97,7 @@ export function StepThree({
                 )}
                 disabled={isLoading}>
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {closeDate ? format(closeDate, "PPP") : "Pick a date"}
+                {closeDate ? formatDate(closeDate) : "Pick a date"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">

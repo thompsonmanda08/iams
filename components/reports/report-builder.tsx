@@ -37,7 +37,8 @@ import { ReportBuilderSkeleton } from "./report-builder-skeleton";
 import { getDataSourceData } from "@/app/_actions/reports-actions";
 import { transformWidgetData } from "@/hooks/shared/use-widget-data";
 import { notify } from "@/lib/utils";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 
 // Re-export for convenience
 export type { ReportEntityType };
@@ -892,7 +893,7 @@ export function ReportBuilder({
                 <div>
                   <span className="text-muted-foreground text-xs">Created</span>
                   <p className="text-foreground text-sm font-medium">
-                    {format(report?.created_at || new Date(), "dd MMMMMM yyyy")}
+                    {formatDate(report?.created_at || new Date())}
                     {report.created_by && (
                       <span className="text-muted-foreground font-normal">
                         {" "}

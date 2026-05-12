@@ -20,6 +20,7 @@ import { User } from "@/lib/types/account";
 import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface FindingFormProps {
   category: any;
@@ -293,7 +294,7 @@ export function FindingForm({
           {formData.due_date && (
             <div>
               <p className="text-primary mb-1 text-sm font-semibold">Due Date</p>
-              <Badge variant="outline">{formData.due_date.toLocaleDateString()}</Badge>
+              <Badge variant="outline">{formatDate(formData.due_date)}</Badge>
             </div>
           )}
         </CardContent>
@@ -317,12 +318,12 @@ export function FindingForm({
                   <p className="text-muted-foreground mt-1 text-xs">
                     {lastFinding.finding_number && `Finding #${lastFinding.finding_number} • `}
                     {lastFinding.created_at || lastFinding.createdAt
-                      ? `Last modified ${new Date(lastFinding.created_at || lastFinding.createdAt).toLocaleDateString()}`
+                      ? `Last modified ${formatDate(lastFinding.created_at || lastFinding.createdAt)}`
                       : "Created previously"}
                   </p>
                   {lastFinding.updated_at && (
                     <p className="text-muted-foreground text-xs">
-                      Updated: {new Date(lastFinding.updated_at).toLocaleDateString()}
+                      Updated: {formatDate(lastFinding.updated_at)}
                     </p>
                   )}
                 </div>

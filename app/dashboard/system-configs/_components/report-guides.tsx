@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { formatDate } from "@/lib/utils/date-format";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -107,14 +108,6 @@ export function ReportGuides() {
       page: updates.page || prev.page,
       page_size: updates.page_size || prev.page_size
     }));
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric"
-    });
   };
 
   const getReportTypeLabel = (type: string) => {

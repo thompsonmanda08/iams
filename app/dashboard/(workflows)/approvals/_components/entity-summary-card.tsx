@@ -24,7 +24,7 @@ import {
   getSeverityColor
 } from "@/lib/utils/entity-preview-utils";
 import { getFindingEvidence } from "@/app/_actions/audit-module-actions";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface EntitySummaryCardProps {
   entityType: EntityType;
@@ -158,11 +158,11 @@ function AuditPlanSummaryContent({ data }: { data: EntityPreviewData }) {
           label="Planned Period"
           value={
             data.start_date && data.end_date
-              ? `${format(new Date(data.start_date), "MMM d, yyyy")} - ${format(new Date(data.end_date), "MMM d, yyyy")}`
+              ? `${formatDate(data.start_date)} - ${formatDate(data.end_date)}`
               : data.start_date
-              ? format(new Date(data.start_date), "MMM d, yyyy")
+              ? formatDate(data.start_date)
               : data.end_date
-              ? format(new Date(data.end_date), "MMM d, yyyy")
+              ? formatDate(data.end_date)
               : "N/A"
           }
         />
@@ -452,14 +452,11 @@ function UniverseSummaryContent({ data }: { data: EntityPreviewData }) {
           label="Period"
           value={
             data.start_date && data.end_date
-              ? `${format(new Date(data.start_date), "MMM d, yyyy")} - ${format(
-                  new Date(data.end_date),
-                  "MMM d, yyyy"
-                )}`
+              ? `${formatDate(data.start_date)} - ${formatDate(data.end_date)}`
               : data.start_date
-              ? format(new Date(data.start_date), "MMM d, yyyy")
+              ? formatDate(data.start_date)
               : data.end_date
-              ? format(new Date(data.end_date), "MMM d, yyyy")
+              ? formatDate(data.end_date)
               : "N/A"
           }
         />

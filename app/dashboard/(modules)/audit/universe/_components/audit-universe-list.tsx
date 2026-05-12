@@ -53,6 +53,7 @@ import { usePermissions } from "@/hooks/use-permissions";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { formatDate } from "@/lib/utils/date-format";
 
 // Mock data removed - using real backend data only
 
@@ -469,7 +470,7 @@ export default function AuditUniverseList({
                               <StatusBadge status={status} />
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
-                              {new Date(dateCreated).toLocaleDateString()}
+                              {formatDate(dateCreated)}
                             </TableCell>
                             <TableCell className="text-center">
                               <div className="flex justify-end gap-1">

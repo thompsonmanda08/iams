@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { LogItem } from "./log-item";
 import { EnrichedLog, PaginationInfo } from "@/lib/types/risk-log";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface ActionLogProps {
   logs: EnrichedLog[];
@@ -30,7 +31,7 @@ export function ActionLog({ logs, pagination, onPageChange, loading = false }: A
 
   const groupedLogs = filteredLogs?.reduce(
     (groups, log) => {
-      const date = new Date(log.created_at).toLocaleDateString();
+      const date = formatDate(log.created_at);
       if (!groups[date]) groups[date] = [];
       groups[date].push(log);
       return groups;

@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { format } from "date-fns";
 import { ChevronDownIcon } from "lucide-react";
+import { formatDate } from "@/lib/utils/date-format";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -82,7 +82,7 @@ export function DatePicker({
             )}
             disabled={isDisabled || props?.disabled}>
             {value && value instanceof Date && !isNaN(value.getTime()) ? (
-              format(value, "PPP")
+              formatDate(value)
             ) : (
               <span>Pick a date</span>
             )}

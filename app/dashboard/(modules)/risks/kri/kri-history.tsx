@@ -158,7 +158,7 @@ export function KRIHistory({ kri, open, onClose }: KRIHistoryProps) {
     }));
 
   const events = measurements.map((m: Measurement) => ({
-    date: format(new Date(m.measurement_date), "MMM dd, yyyy HH:mm"),
+    date: format(new Date(m.measurement_date), "MMM d, yyyy HH:mm"),
     event: `Value updated to ${formatValue(m.measured_value, kri.measurement_type, kri.currency_code)} - ${m.status}`,
     type: m.status === "Red" ? "warning" : m.status === "Green" ? "success" : "info",
     notes: m.notes,

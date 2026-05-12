@@ -12,7 +12,7 @@ import {
   getTemplateCategories
 } from "@/app/_actions/audit-module-actions";
 import { getGeneralWorkPaperConfigsByTemplateId } from "@/app/_actions/audit-settings-actions";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { TemplateCategoriesTable } from "@/app/dashboard/system-configs/audit-settings/_components/template-categories-table";
 import PageHeader from "@/components/page-header";
 import BackButton from "@/components/back-button";
@@ -111,9 +111,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                   Created
                 </p>
                 <p className="dark:text-foreground mt-1 text-sm text-blue-800">
-                  {template.created_at
-                    ? format(new Date(template.created_at), "MMMM d, yyyy")
-                    : "N/A"}
+                  {formatDate(template.created_at)}
                 </p>
               </div>
               <div>
@@ -121,9 +119,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                   Last Updated
                 </p>
                 <p className="dark:text-foreground mt-1 text-sm text-blue-800">
-                  {template.updated_at
-                    ? format(new Date(template.updated_at), "MMMM d, yyyy")
-                    : "N/A"}
+                  {formatDate(template.updated_at)}
                 </p>
               </div>
             </div>

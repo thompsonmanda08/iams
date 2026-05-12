@@ -20,7 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn, notify } from "@/lib/utils";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { submitRiskAcceptanceSignature } from "@/app/_actions/risk-module-actions";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -386,7 +386,7 @@ export default function SignatureForm({
                       !formData.date && "text-muted-foreground"
                     )}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.date ? format(formData.date as Date, "PPP") : "Pick a date"}
+                    {formData.date ? formatDate(formData.date as Date) : "Pick a date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">

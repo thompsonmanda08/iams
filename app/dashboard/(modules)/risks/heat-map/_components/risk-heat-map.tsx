@@ -12,7 +12,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { AlertTriangle, Calendar, Coins, User, Building, Loader2, ArrowRight } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { cn } from "@/lib/utils";
 import PageHeader from "@/components/page-header";
 import { RiskSummaryStats } from "./summary";
@@ -388,7 +388,7 @@ function CellDetailsContent({
                           <Calendar className="text-muted-foreground h-3 w-3 shrink-0" />
                           <span className="text-muted-foreground text-xs">
                             {risk.target_closing_date
-                              ? format(new Date(risk.target_closing_date), "MMM d, yyyy")
+                              ? formatDate(risk.target_closing_date)
                               : "—"}
                           </span>
                         </div>

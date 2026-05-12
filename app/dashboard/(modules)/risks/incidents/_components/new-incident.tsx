@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { cn } from "@/lib/utils";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import {
@@ -215,7 +215,7 @@ export function NewIncident() {
                     )}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {formData.incident_date ? (
-                      format(formData.incident_date, "PPP")
+                      formatDate(formData.incident_date)
                     ) : (
                       <span>Pick a date</span>
                     )}
@@ -244,7 +244,7 @@ export function NewIncident() {
                     )}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {formData.discovery_date ? (
-                      format(formData.discovery_date, "PPP")
+                      formatDate(formData.discovery_date)
                     ) : (
                       <span>Pick a date</span>
                     )}
@@ -310,7 +310,7 @@ export function NewIncident() {
                     )}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {formData.due_date ? (
-                      format(formData.due_date, "PPP")
+                      formatDate(formData.due_date)
                     ) : (
                       <span>Pick a date</span>
                     )}

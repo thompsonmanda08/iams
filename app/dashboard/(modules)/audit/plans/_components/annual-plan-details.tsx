@@ -19,7 +19,7 @@ import { Suspense, useState } from "react";
 import Loader from "@/components/ui/loader";
 import { AnnualPlanItems, CreateOrUpdatePlanItem } from "./annual-plan-items";
 import { Textarea } from "@/components/ui/textarea";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
@@ -112,7 +112,7 @@ export default function AuditDetailClient({
             <div className="text-muted-foreground flex gap-6">
               <div className="text-right">
                 <p className="text-foreground mb-1.5 font-medium">Created</p>
-                <p>{format(new Date(auditPlan.created_at), "MMM d, yyyy")}</p>
+                <p>{formatDate(auditPlan.created_at)}</p>
                 {auditPlan?.created_by_name && (
                   <>
                     <p className="text-sm">by {auditPlan?.created_by_name || "System"}</p>
@@ -121,7 +121,7 @@ export default function AuditDetailClient({
               </div>
               <div className="text-right">
                 <p className="text-foreground mb-1.5 font-medium">Updated</p>
-                <p>{format(new Date(auditPlan?.updated_at), "MMM d, yyyy")}</p>
+                <p>{formatDate(auditPlan?.updated_at)}</p>
                 {auditPlan?.updated_by_name && (
                   <>
                     <p className="text-sm">by {auditPlan?.updated_by_name || "System"}</p>

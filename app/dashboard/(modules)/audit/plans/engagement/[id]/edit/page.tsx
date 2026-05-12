@@ -49,6 +49,7 @@ import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_
 import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { formatDate } from "@/lib/utils/date-format";
 
 /**
  * Audit Plan Form Data Type
@@ -246,9 +247,11 @@ export default function EditAuditPlanPage() {
       : [];
 
   // Fetch budgets
+  // Engagement edit only shows APPROVED budgets — same constraint as create.
   const { data: budgetsResponse, isLoading: loadingBudgets } = useBudgets({
     is_active: true,
-    department_id: formData.department_id
+    department_id: formData.department_id,
+    status: "APPROVED"
   });
 
   const budgetsData = Array.isArray(budgetsResponse?.data)
@@ -870,8 +873,8 @@ export default function EditAuditPlanPage() {
                       <div className="bg-muted rounded-md p-4">
                         <Label className="text-base font-medium">Audit Period</Label>
                         <p className="text-muted-foreground mt-1 text-sm">
-                          {formData.opening_meeting_datetime.toLocaleDateString()} -{" "}
-                          {formData.closing_meeting_datetime.toLocaleDateString()}
+                          {formatDate(formData.opening_meeting_datetime)} -{" "}
+                          {formatDate(formData.closing_meeting_datetime)}
                         </p>
                       </div>
                     )}

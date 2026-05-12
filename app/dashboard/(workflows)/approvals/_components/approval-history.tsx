@@ -7,6 +7,7 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { formatDistanceToNow } from "date-fns";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import type { Pagination } from "@/lib/types";
+import { formatDateTime } from "@/lib/utils/date-format";
 
 interface ApprovalRecord {
   id: string;
@@ -111,7 +112,7 @@ export function ApprovalHistory({
               {/* Metadata */}
               <div className="flex gap-4 text-xs text-muted-foreground">
                 <span>ID: {approval.id.substring(0, 8)}...</span>
-                <span>{new Date(approval.created_at).toLocaleString()}</span>
+                <span>{formatDateTime(approval.created_at)}</span>
               </div>
             </div>
           </Card>

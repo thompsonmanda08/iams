@@ -26,8 +26,8 @@ import {
 } from "lucide-react";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
-import { format } from "date-fns";
 import { cn, notify } from "@/lib/utils";
+import { formatDate } from "@/lib/utils/date-format";
 import { ActionFindingsDialog } from "@/app/dashboard/(modules)/risks/_components/action-findings-dialog";
 import { ActionEvidenceViewerDialog } from "@/app/dashboard/(modules)/risks/_components/action-evidence-viewer-dialog";
 import { ActionReviewDialog } from "@/app/dashboard/(modules)/risks/_components/action-review-dialog";
@@ -230,7 +230,7 @@ export function ActionsTable({
                             </TooltipContent>
                           </Tooltip>
                           <span className="text-muted-foreground line-clamp-3 text-xs">
-                            Date created: {format(new Date(action.created_at), "MMM dd, yyyy")}
+                            Date created: {formatDate(action.created_at)}
                           </span>
                         </div>
                       </TableCell>
@@ -272,7 +272,7 @@ export function ActionsTable({
                       <TableCell>
                         <div className="text-sm">
                           <div className="font-medium">
-                            {format(new Date(action.due_date), "MMM dd, yyyy")}
+                            {formatDate(action.due_date)}
                           </div>
                           <div
                             className={cn(

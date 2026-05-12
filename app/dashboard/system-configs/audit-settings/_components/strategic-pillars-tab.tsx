@@ -48,6 +48,7 @@ import { Badge } from "@/components/ui/badge";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 import { PermissionButton } from "@/components/ui/permission-button";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface PillarFormData extends Omit<AuditConfigurableItem, "id"> {
   start_date?: string;
@@ -229,7 +230,7 @@ export default function StrategicPillarsTab() {
                       <TableCell>
                         <span className="font-mono text-sm">
                           {item.start_date && item.end_date
-                            ? `${new Date(item.start_date).toLocaleDateString()} - ${new Date(item.end_date).toLocaleDateString()}`
+                            ? `${formatDate(item.start_date)} - ${formatDate(item.end_date)}`
                             : "No duration set"}
                         </span>
                       </TableCell>

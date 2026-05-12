@@ -16,7 +16,7 @@ import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, Eye, Edit, Trash2, FileText, AlertCircle, Loader2 } from "lucide-react";
 import type { Finding } from "@/lib/types/audit-types";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -248,7 +248,7 @@ export function FindingsTable({ findings, isLoading, onCreateClick }: FindingsTa
                 <TableCell>
                   {finding.dueDate ? (
                     <span className="text-sm">
-                      {format(new Date(finding.dueDate), "MMM d, yyyy")}
+                      {formatDate(finding.dueDate)}
                     </span>
                   ) : (
                     <span className="text-muted-foreground text-sm">No due date</span>

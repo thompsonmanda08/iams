@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AlertCircle, Play, RotateCw, CheckCircle2, AlertTriangle } from "lucide-react";
+import { formatDateTime } from "@/lib/utils/date-format";
 
 export const WorkflowWorkerStatus = () => {
   const { data, isLoading, error } = useWorkerStatus();
@@ -51,10 +52,10 @@ export const WorkflowWorkerStatus = () => {
   const pendingTasks = workerStatus?.pending_tasks_count || 0;
   const failedTasks = workerStatus?.failed_tasks_count || 0;
   const lastRun = workerStatus?.last_run_at
-    ? new Date(workerStatus.last_run_at).toLocaleString()
+    ? formatDateTime(workerStatus.last_run_at)
     : "Never";
   const nextRun = workerStatus?.next_run_at
-    ? new Date(workerStatus.next_run_at).toLocaleString()
+    ? formatDateTime(workerStatus.next_run_at)
     : "Not scheduled";
 
   return (
@@ -180,7 +181,7 @@ export const WorkflowWorkerStatus = () => {
                     <p className="text-sm font-medium">{task.task_type}</p>
                     <p className="text-xs text-muted-foreground mt-1">{task.error_message}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Last attempt: {new Date(task.last_attempt_at).toLocaleString()}
+                      Last attempt: {formatDateTime(task.last_attempt_at)}
                     </p>
                   </div>
                 </Alert>

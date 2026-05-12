@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, AlertCircle, Clock, FileText, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { useState } from "react";
 import { ActionEvidenceViewerDialog } from "./action-evidence-viewer-dialog";
 import type { ActionDefinition } from "@/app/_actions/risk-module-actions";
@@ -134,7 +134,7 @@ export function ActionsLogsCards({ initialActions }: ActionsLogsCardsProps) {
           <div className="grid grid-cols-2 gap-2 border-t pt-2">
             <div>
               <p className="font-medium text-gray-700">Due Date</p>
-              <p className="text-gray-900">{format(new Date(action.due_date), "MMM dd")}</p>
+              <p className="text-gray-900">{formatDate(action.due_date)}</p>
             </div>
             <div>
               <p className="font-medium text-gray-700">Execution Status</p>
@@ -151,7 +151,7 @@ export function ActionsLogsCards({ initialActions }: ActionsLogsCardsProps) {
 
           {execution?.submitted_at && (
             <div className="flex items-center justify-between pt-2 text-gray-500">
-              <span>Submitted: {format(new Date(execution.submitted_at), "MMM dd, yyyy")}</span>
+              <span>Submitted: {formatDate(execution.submitted_at)}</span>
               {hasEvidence && (
                 <div className="flex items-center gap-1 text-blue-600">
                   <Eye className="h-3 w-3" />

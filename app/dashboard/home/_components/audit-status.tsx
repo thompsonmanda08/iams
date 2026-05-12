@@ -2,6 +2,7 @@
 
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface AuditPlan {
   title: string;
@@ -26,14 +27,6 @@ interface AuditSummary {
 interface AuditStatusProps {
   auditSummary: AuditSummary;
 }
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric"
-  });
-};
 
 export default function AuditStatus({ auditSummary }: AuditStatusProps) {
   return (

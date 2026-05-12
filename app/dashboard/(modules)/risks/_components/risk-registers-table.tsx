@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Notebook, Pencil, Trash2, View } from "lucide-react";
 import { cn, notify } from "@/lib/utils";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { RiskRegister } from "@/lib/types/risk-types";
 import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
@@ -149,14 +149,6 @@ export default function RiskRegistersTable({
       OVERDUE: "bg-red-100 text-red-700"
     };
     return colors[timelineStatus as keyof typeof colors] || "bg-gray-100 text-gray-700";
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), "MMM dd, yyyy");
-    } catch {
-      return dateString;
-    }
   };
 
   const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: searchedRegisters } = useTableSearch({

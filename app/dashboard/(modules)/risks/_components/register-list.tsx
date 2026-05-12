@@ -41,6 +41,7 @@ import { KRIStatsSection } from "./kri-stats-section";
 import { is } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePermissions } from "@/hooks/use-permissions";
+import { formatDate } from "@/lib/utils/date-format";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
@@ -100,11 +101,6 @@ export default function KRIRegistersClient({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { checkPermission, hasPermission } = usePermissions();
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-  };
 
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());

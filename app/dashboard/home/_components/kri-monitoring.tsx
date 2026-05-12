@@ -10,6 +10,7 @@ import {
   ChartLegendContent
 } from "@/components/ui/chart";
 import { PieChart, Pie, Label } from "recharts";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface KRI {
   id: string;
@@ -152,7 +153,7 @@ export default function KriMonitoring({ kriSummary }: KriMonitoringProps) {
                   <div className="flex-1">
                     <p className="text-sm font-medium">{kri.name}</p>
                     <p className="text-muted-foreground text-xs">
-                      Updated {new Date(kri.updated_at).toLocaleDateString()}
+                      Updated {formatDate(kri.updated_at)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

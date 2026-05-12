@@ -21,7 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { cn, notify } from "@/lib/utils";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 
 // Type definitions
 type RiskRate = "High" | "Medium" | "Low" | "";
@@ -392,7 +392,7 @@ export default function RiskAcceptanceForm({
                         )}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {formData.risk_acceptance_expiry_date
-                          ? format(formData.risk_acceptance_expiry_date as Date, "PPP")
+                          ? formatDate(formData.risk_acceptance_expiry_date as Date)
                           : "Pick a date"}
                       </Button>
                     </PopoverTrigger>

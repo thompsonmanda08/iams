@@ -18,6 +18,7 @@ import {
   pdf
 } from "@react-pdf/renderer";
 import type { ReactElement } from "react";
+import { formatDate } from "@/lib/utils/date-format";
 
 const PALETTE = {
   ink: "#111827",
@@ -606,11 +607,7 @@ function MemoDocument({
   logoDataUrl = null
 }: MemoDocumentProps) {
   const blocks = parseHtmlToBlocks(html);
-  const dateLabel = generatedAt.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-  });
+  const dateLabel = formatDate(generatedAt);
 
   return (
     <Document title={title} author="Internal Audit" creator="IAMS">

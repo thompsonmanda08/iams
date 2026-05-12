@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash2, FileText, Download, View } from "lucide-react";
 import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import Link from "next/link";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -210,7 +211,7 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
                 <TableCell>
                   <div className="space-y-1 text-sm">
                     <p>
-                      {report.updated_at ? format(new Date(report.updated_at), "MMM d, yyyy") : "-"}
+                      {report.updated_at ? formatDate(report.updated_at) : "-"}
                     </p>
                     <p className="text-muted-foreground text-xs">
                       {report.updated_at ? format(new Date(report.updated_at), "h:mm a") : ""}

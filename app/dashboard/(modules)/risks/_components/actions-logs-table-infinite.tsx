@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import Search from "@/components/ui/search-field";
 import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { cn } from "@/lib/utils";
 import { ActionEvidenceViewerDialog } from "@/app/dashboard/(modules)/risks/_components/action-evidence-viewer-dialog";
 import { getActions } from "@/app/_actions/risk-module-actions";
@@ -325,7 +326,7 @@ export function ActionsLogsTableWithInfiniteScroll({
                       <TableCell>
                         <div className="text-sm">
                           <div className="font-medium">
-                            {format(new Date(action.due_date), "MMM dd, yyyy")}
+                            {formatDate(action.due_date)}
                           </div>
                           <div
                             className={cn(
@@ -368,7 +369,7 @@ export function ActionsLogsTableWithInfiniteScroll({
                           {execution?.submitted_at ? (
                             <div>
                               <div className="font-medium">
-                                {format(new Date(execution.submitted_at), "MMM dd, yyyy")}
+                                {formatDate(execution.submitted_at)}
                               </div>
                               <div className="text-muted-foreground text-xs">
                                 {format(new Date(execution.submitted_at), "h:mm a")}

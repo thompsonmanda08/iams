@@ -2,7 +2,7 @@ import { getKRIs, type KRI } from "@/app/_actions/risk-module-actions";
 import { Card } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Minus, AlertCircle, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { KRIHistoryButton } from "../../_components/kri-history-button";
 import BackButton from "@/components/back-button";
 
@@ -364,7 +364,7 @@ export default async function KRIBreachesPage() {
                 <div className="text-muted-foreground flex items-center justify-between border-t pt-3 text-xs">
                   <span>
                     Last updated:{" "}
-                    {kri.lastUpdated ? format(new Date(kri.lastUpdated), "MMM dd, yyyy") : "N/A"}
+                    {formatDate(kri.lastUpdated)}
                   </span>
                   <KRIHistoryButton
                     kri={{

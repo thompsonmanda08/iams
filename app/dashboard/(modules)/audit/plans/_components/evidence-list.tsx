@@ -13,6 +13,7 @@ import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 import { PermissionButton } from "@/components/ui/permission-button";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface EvidenceListProps {
   evidence: FindingEvidence[];
@@ -111,7 +112,7 @@ export function EvidenceList({ evidence, onEdit, onDelete, isLoading, stats }: E
                 {/* Meta Information */}
                 <div className="text-muted-foreground mt-2 flex flex-wrap gap-3 text-xs">
                   {item.collection_date && (
-                    <span>Collected: {new Date(item.collection_date).toLocaleDateString()}</span>
+                    <span>Collected: {formatDate(item.collection_date)}</span>
                   )}
                   <span>
                     Added {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}

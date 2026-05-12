@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { EnrichedLog, EventType } from "@/lib/types/risk-log";
 import { format } from "date-fns";
+import { formatDate, formatDateTime } from "@/lib/utils/date-format";
 import { StatusBadge } from "@/components/status-badge";
 
 interface LogItemProps {
@@ -202,7 +203,7 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground font-medium">Due date</span>
                 <span className="text-foreground font-semibold">
-                  {format(new Date(log.metadata.due_date), "MMM d, yyyy")}
+                  {formatDate(log.metadata.due_date)}
                 </span>
               </div>
             )}
@@ -441,7 +442,7 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
                   Signed at
                 </span>
                 <p className="text-foreground mt-2 font-medium">
-                  {format(new Date(log.metadata.signed_at), "PPP p")}
+                  {formatDateTime(log.metadata.signed_at)}
                 </p>
               </div>
             )}
@@ -477,7 +478,7 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
                   Signed at
                 </span>
                 <p className="text-foreground mt-2 font-medium">
-                  {format(new Date(log.metadata.signed_at), "PPP p")}
+                  {formatDateTime(log.metadata.signed_at)}
                 </p>
               </div>
             )}

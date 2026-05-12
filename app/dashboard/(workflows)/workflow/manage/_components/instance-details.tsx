@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { WorkflowStateTimeline } from "./workflow-state-timeline";
+import { formatDate, formatDateTime } from "@/lib/utils/date-format";
 
 interface InstanceDetailsProps {
   instanceId: string;
@@ -137,26 +138,14 @@ export const InstanceDetails = ({
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Created</p>
               <p className="text-sm">
-                {new Date(instance.created_at).toLocaleDateString(undefined, {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit"
-                })}
+                {formatDateTime(instance.created_at)}
               </p>
             </div>
 
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
               <p className="text-sm">
-                {new Date(instance.updated_at).toLocaleDateString(undefined, {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit"
-                })}
+                {formatDateTime(instance.updated_at)}
               </p>
             </div>
 
@@ -234,7 +223,7 @@ export const InstanceDetails = ({
                         <div>
                           <p className="text-sm font-medium text-muted-foreground">Processed</p>
                           <p className="text-sm">
-                            {new Date(approval.created_at).toLocaleDateString()}
+                            {formatDate(approval.created_at)}
                           </p>
                         </div>
                       </div>

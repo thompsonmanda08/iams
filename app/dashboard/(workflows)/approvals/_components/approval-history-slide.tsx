@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import type { Pagination } from "@/lib/types";
 import type { Task } from "@/lib/types/task";
+import { formatDateTime } from "@/lib/utils/date-format";
 
 interface ApprovalRecord {
   id: string;
@@ -137,7 +138,7 @@ export function ApprovalHistorySlide({
                   {/* Metadata */}
                   <div className="flex flex-col gap-1 text-xs text-muted-foreground">
                     <span>ID: {approval.id.substring(0, 8)}...</span>
-                    <span>{new Date(approval.created_at).toLocaleString()}</span>
+                    <span>{formatDateTime(approval.created_at)}</span>
                   </div>
                 </div>
               </Card>

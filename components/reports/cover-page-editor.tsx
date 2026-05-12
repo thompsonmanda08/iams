@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { useSystemSetup } from "@/hooks/use-users-query-data";
 import { useReportStore } from "@/store/report-store";
 import { Trash2, Plus, Settings2, X, GripVertical } from "lucide-react";
-import { format, formatDate } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface TableColumn {
   key: string;
@@ -176,9 +176,8 @@ export const CoverPageEditor = ({
               label="Report Date"
               type="text"
               disabled
-              value={format(
-                parsedData.report_date || report?.created_at || new Date(),
-                "MMM d, yyyy"
+              value={formatDate(
+                parsedData.report_date || report?.created_at || new Date()
               )}
               className="cursor-not-allowed opacity-70"
             />

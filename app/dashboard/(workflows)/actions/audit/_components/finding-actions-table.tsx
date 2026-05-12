@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -171,13 +171,13 @@ export function FindingActionsTable({ actions, handleSendReminder }: FindingActi
                   {/* Created At Date */}
                   <TableCell>
                     <p className="text-sm">
-                      {action.created_at ? format(new Date(action.created_at), "MMM d, yyyy") : "-"}
+                      {action.created_at ? formatDate(action.created_at) : "-"}
                     </p>
                   </TableCell>
                   {/* Due Date */}
                   <TableCell>
                     <p className="text-sm">
-                      {action.due_date ? format(new Date(action.due_date), "MMM d, yyyy") : "-"}
+                      {action.due_date ? formatDate(action.due_date) : "-"}
                     </p>
                   </TableCell>
 

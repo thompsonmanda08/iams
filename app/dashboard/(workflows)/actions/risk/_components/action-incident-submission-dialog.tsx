@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatDate, formatDateTime } from "@/lib/utils/date-format";
 import {
   Dialog,
   DialogContent,
@@ -240,7 +240,7 @@ export function ActionIncidentSubmissionDialog({
                       <div className="flex items-center gap-2">
                         <Calendar className="text-muted-foreground h-4 w-4" />
                         <p className="text-sm font-medium">
-                          {format(new Date(action.due_date), "PPP")}
+                          {formatDate(action.due_date)}
                         </p>
                       </div>
                     </div>
@@ -250,7 +250,7 @@ export function ActionIncidentSubmissionDialog({
                         Created
                       </span>
                       <p className="text-sm font-medium">
-                        {format(new Date(action.created_at), "PPP p")}
+                        {formatDateTime(action.created_at)}
                       </p>
                     </div>
                   </CardContent>
@@ -275,7 +275,7 @@ export function ActionIncidentSubmissionDialog({
                                 {submission.responsible_person_name}
                               </p>
                               <p className="text-muted-foreground text-xs">
-                                Submitted {format(new Date(submission.submitted_at), "PPP p")}
+                                Submitted {formatDateTime(submission.submitted_at)}
                               </p>
                             </div>
                             <Badge variant="outline">Submitted</Badge>
@@ -352,7 +352,7 @@ export function ActionIncidentSubmissionDialog({
                               </p>
                               <p className="text-muted-foreground text-xs">
                                 Reviewed{" "}
-                                {format(new Date(submission.submitted_at), "PPP p") || "N/A"}
+                                {formatDateTime(submission.submitted_at)}
                               </p>
                             </div>
                             <Badge

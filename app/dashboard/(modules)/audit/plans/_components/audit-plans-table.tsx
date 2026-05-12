@@ -15,7 +15,7 @@ import { PermissionButton } from "@/components/ui/permission-button";
 import { AuditPlanStatusBadge } from "../../../../../../components/audit/audit-plan-status-badge";
 import { Eye, Edit, Trash2, Loader2, Plus, ClipboardListIcon, View } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import Link from "next/link";
 import {
   AlertDialog,
@@ -265,10 +265,10 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
                   <TableCell>
                     <div className="space-y-1 text-sm">
                       <p>
-                        {plan.start_date ? format(new Date(plan.start_date), "MMM d, yyyy") : "-"}
+                        {plan.start_date ? formatDate(plan.start_date) : "-"}
                       </p>
                       <p className="text-muted-foreground">
-                        {plan.end_date ? format(new Date(plan.end_date), "MMM d, yyyy") : "-"}
+                        {plan.end_date ? formatDate(plan.end_date) : "-"}
                       </p>
                     </div>
                   </TableCell>

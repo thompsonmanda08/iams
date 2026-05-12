@@ -9,7 +9,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { formatDateTime } from "@/lib/utils/date-format";
 import type { Execution } from "@/app/_actions/risk-module-actions";
 import { StatusBadge } from "@/components/status-badge";
 
@@ -85,7 +85,7 @@ export function ActionEvidenceViewerDialog({
                 <div>
                   <p className="text-muted-foreground text-xs">Submitted on</p>
                   <p className="text-foreground text-sm font-medium">
-                    {format(new Date(execution.submitted_at), "MMM dd, yyyy h:mm a")}
+                    {formatDateTime(execution.submitted_at)}
                   </p>
                 </div>
               )}

@@ -47,6 +47,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { formatDate } from "@/lib/utils/date-format";
 
 /**
  * Audit Plan Form Data Type
@@ -814,8 +815,8 @@ export default function NewAuditPlanPage() {
                       <div className="bg-muted rounded-md p-4">
                         <Label className="text-base font-medium">Audit Period</Label>
                         <p className="text-muted-foreground mt-1 text-sm">
-                          {formData.opening_meeting_datetime.toLocaleDateString()} -{" "}
-                          {formData.closing_meeting_datetime.toLocaleDateString()}
+                          {formatDate(formData.opening_meeting_datetime)} -{" "}
+                          {formatDate(formData.closing_meeting_datetime)}
                         </p>
                       </div>
                     )}

@@ -30,6 +30,7 @@ import {
 import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import CreateUserForm from "../../_components/create-user-dialog";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface UserDetailsClientProps {
   user: User;
@@ -52,11 +53,7 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
     if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
 
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    });
+    return formatDate(date);
   };
 
   return (
@@ -267,21 +264,13 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
                     <div className="flex flex-col gap-1 text-sm">
                       <span className="text-muted-foreground">Created At</span>
                       <span className="font-medium">
-                        {new Date(user.created_at).toLocaleDateString("en-US", {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric"
-                        })}
+                        {formatDate(user.created_at)}
                       </span>
                     </div>
                     <div className="flex flex-col gap-1 text-sm">
                       <span className="text-muted-foreground">Last Updated</span>
                       <span className="font-medium">
-                        {new Date(user.updated_at).toLocaleDateString("en-US", {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric"
-                        })}
+                        {formatDate(user.updated_at)}
                       </span>
                     </div>
                   </div>

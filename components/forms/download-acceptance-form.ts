@@ -1,4 +1,5 @@
 import { toLocalDateString } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils/date-format";
 
 type ApproverKey = "riskCoordinator" | "riskOwner" | "reviewedBy" | "emcApproval" | "boardApproval";
 
@@ -109,7 +110,7 @@ export const downloadPDF = ({formData}:any): void => {
   </div>
 
   <p style="text-align: center; color: #64748b; margin-top: 40px; font-size: 12px;">
-    Generated on ${new Date().toLocaleString()}
+    Generated on ${formatDateTime(new Date())}
   </p>
 </body>
 </html>`;

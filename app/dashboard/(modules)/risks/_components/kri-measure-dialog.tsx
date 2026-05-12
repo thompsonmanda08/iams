@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/use-permissions";
 
@@ -96,7 +96,7 @@ export function KRIMeasureDialog({
                   )}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formData.measurement_date ? (
-                    format(formData.measurement_date, "PPP")
+                    formatDate(formData.measurement_date)
                   ) : (
                     <span>Pick a date</span>
                   )}

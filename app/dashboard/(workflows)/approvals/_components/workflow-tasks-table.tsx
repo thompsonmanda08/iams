@@ -23,6 +23,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { StatusBadge } from "@/components/status-badge";
 import NextLink from "next/link";
 import { getEntityDetailRoute, normalizeEntityType } from "@/lib/utils/entity-preview-utils";
+import { formatDateTime } from "@/lib/utils/date-format";
 
 interface WorkflowTasksTableProps {
   tasks: WorkflowTask[];
@@ -378,11 +379,11 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-xs">
-                      <span>Assigned on: {new Date(task.created_at).toLocaleString()}</span>
+                      <span>Assigned on: {formatDateTime(task.created_at)}</span>
                       {task.completed_at && (
                         <>
                           <br />
-                          <span>Completed on: {new Date(task.completed_at).toLocaleString()}</span>
+                          <span>Completed on: {formatDateTime(task.completed_at)}</span>
                           {task.completed_by_name && (
                             <>
                               <br />

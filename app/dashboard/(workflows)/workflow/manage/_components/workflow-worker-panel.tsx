@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { notify } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils/date-format";
 
 interface WorkerStatus {
   status: string;
@@ -187,7 +188,7 @@ export const WorkflowWorkerPanel = () => {
                 <div className="bg-muted/50 rounded-lg border p-4">
                   <p className="text-muted-foreground text-sm font-medium">Last Run</p>
                   <p className="mt-1 text-sm font-semibold">
-                    {new Date(workerStatus.last_run).toLocaleString()}
+                    {formatDateTime(workerStatus.last_run)}
                   </p>
                 </div>
               )}
@@ -195,7 +196,7 @@ export const WorkflowWorkerPanel = () => {
                 <div className="bg-muted/50 rounded-lg border p-4">
                   <p className="text-muted-foreground text-sm font-medium">Next Run</p>
                   <p className="mt-1 text-sm font-semibold">
-                    {new Date(workerStatus.next_run).toLocaleString()}
+                    {formatDateTime(workerStatus.next_run)}
                   </p>
                 </div>
               )}

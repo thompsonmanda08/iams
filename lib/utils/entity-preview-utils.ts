@@ -50,6 +50,9 @@ export function getEntityDetailRoute(
     case "ANNUAL_AUDIT_PLAN":
       return `/dashboard/audit/plans/annual/${entityId}`;
 
+    case "REPORT":
+      return `/dashboard/reports/${entityId}`;
+
     default:
       return null;
   }
@@ -83,6 +86,9 @@ export function normalizeEntityType(entityType: string): EntityType {
   }
   if (entityType === "AUDIT_CLOSURE") {
     return "AUDIT_PLAN";
+  }
+  if (entityType === "REPORT_APPROVAL" || entityType.includes("REPORT")) {
+    return "REPORT";
   }
 
   // Fallback for unknown types
@@ -164,7 +170,8 @@ export function getEntityTypeLabel(entityType: EntityType): string {
     BUDGET: "Budget",
     FINDING: "Finding",
     UNIVERSE: "Audit Universe",
-    ANNUAL_AUDIT_PLAN: "Annual Audit Plan"
+    ANNUAL_AUDIT_PLAN: "Annual Audit Plan",
+    REPORT: "Report"
   };
 
   return labels[entityType] || entityType;
@@ -194,22 +201,7 @@ export function getStatusLabel(status: string | undefined): string {
  * @param date - The date string or Date object
  * @returns Formatted date string
  */
-export function formatDate(date: string | Date | null | undefined): string {
-  if (!date) {
-    return "N/A";
-  }
-
-  try {
-    const dateObj = typeof date === "string" ? new Date(date) : date;
-    return dateObj.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric"
-    });
-  } catch {
-    return "Invalid date";
-  }
-}
+export { formatDate } from "./date-format";
 
 /**
  * Get color variant for severity level

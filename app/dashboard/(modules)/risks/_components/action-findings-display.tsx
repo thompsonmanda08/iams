@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { ActionFindings } from "@/app/_actions/risk-module-actions";
+import { formatDate } from "@/lib/utils/date-format";
 
 interface ActionFindingsDisplayProps {
   findings: ActionFindings;
@@ -55,7 +56,7 @@ export function ActionFindingsDisplay({ findings, isReviewer = false }: ActionFi
             Action Findings
           </h3>
           <p className="text-sm text-gray-500 mt-1">
-            Submitted on {submissionDate.toLocaleDateString()} at{" "}
+            Submitted on {formatDate(submissionDate)} at{" "}
             {submissionDate.toLocaleTimeString()}
           </p>
         </div>
@@ -140,7 +141,7 @@ export function ActionFindingsDisplay({ findings, isReviewer = false }: ActionFi
           {findings.assessment_date && (
             <p className="text-xs text-green-600 flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              Assessed on {new Date(findings.assessment_date).toLocaleDateString()}
+              Assessed on {formatDate(findings.assessment_date)}
             </p>
           )}
         </div>
@@ -150,7 +151,7 @@ export function ActionFindingsDisplay({ findings, isReviewer = false }: ActionFi
       <div className="flex flex-wrap gap-4 text-xs text-gray-500 pt-2">
         <div className="flex items-center gap-1">
           <Calendar className="h-3 w-3" />
-          Submitted: {submissionDate.toLocaleDateString()}
+          Submitted: {formatDate(submissionDate)}
         </div>
         <div className="flex items-center gap-1">
           <User className="h-3 w-3" />

@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { listGeneralFindings } from "@/app/_actions/general-findings-actions";
 import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date-format";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -290,7 +291,7 @@ export function AuditPlanWorkpaperView({
                 {auditPlan.created_at && (
                   <div className="text-right">
                     <p className="text-foreground mb-1.5 font-medium">Created</p>
-                    <p>{format(new Date(auditPlan.created_at), "MMM d, yyyy")}</p>
+                    <p>{formatDate(auditPlan.created_at)}</p>
                     {auditPlan.created_by && (
                       <>
                         <p className="text-xs">by {auditPlan.created_by_user?.name}</p>
@@ -302,7 +303,7 @@ export function AuditPlanWorkpaperView({
                 {auditPlan.updated_at && (
                   <div className="text-right">
                     <p className="text-foreground mb-1.5 font-medium">Updated</p>
-                    <p>{format(new Date(auditPlan.updated_at), "MMM d, yyyy")}</p>
+                    <p>{formatDate(auditPlan.updated_at)}</p>
                     {auditPlan.updated_by && (
                       <>
                         <p className="text-xs">by {auditPlan.updated_by_user?.name}</p>
@@ -327,7 +328,7 @@ export function AuditPlanWorkpaperView({
                 <p className="text-muted-foreground text-sm">Timeline</p>
                 <p className="text-sm font-semibold">
                   {auditPlan?.start_date && auditPlan?.end_date
-                    ? `${format(new Date(auditPlan.start_date), "MMM d")} - ${format(new Date(auditPlan.end_date), "MMM d, yyyy")}`
+                    ? `${format(new Date(auditPlan.start_date), "MMM d")} - ${formatDate(auditPlan.end_date)}`
                     : "No timeline set"}
                 </p>
               </div>

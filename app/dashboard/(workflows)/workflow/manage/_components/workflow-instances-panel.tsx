@@ -16,6 +16,7 @@ import {
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AlertCircle, GitPullRequestCreateArrow } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatDateTime } from "@/lib/utils/date-format";
 
 interface WorkflowInstancesPanelProps {
   workflowId: string;
@@ -138,13 +139,7 @@ export const WorkflowInstancesPanel = ({
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {new Date(instance.created_at).toLocaleDateString(undefined, {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit"
-                        })}
+                        {formatDateTime(instance.created_at)}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <Button
