@@ -202,33 +202,33 @@ export function ReportDetailsClient({
 }: ReportDetailsClientProps) {
   const { setReport, setEntityId, setEntityType } = useReportStore();
 
-  // Merge report with template first to get initial structure (memoized to prevent infinite loops)
-  const mergedReport = useMemo(() => {
-    if (!initialReport) return null;
+  // Live report: subscribe to TanStack so mutations (save, snapshot, switch,
+  // publish) flow back here on cache invalidation. Falls back to SSR
+  // `initialReport` until the first client fetch resolves.
+  const liveReportQuery = useReport(reportId);
+  const liveContent =
+    (liveReportQuery.data?.data?.report_content as ReportContent | undefined) ?? initialReport;
 
-    let report = mergeReportWithTemplate(initialReport, entity.management_standard, {
+  // Merge report with template — derived from live content so versions[] and
+  // current_version_number stay current after mutations.
+  const mergedReport = useMemo(() => {
+    if (!liveContent) return null;
+
+    let report = mergeReportWithTemplate(liveContent, entity.management_standard, {
       id: reportId,
-      title: initialReport.title,
-      created_at: initialReport.created_at,
-      updated_at: initialReport.updated_at,
+      title: liveContent.title,
+      created_at: liveContent.created_at,
+      updated_at: liveContent.updated_at,
       status: reportStatus
     });
-
-    console.log("🧩 [ReportDetailsClient] Merged report with template:", report, initialReport);
 
     // Ensure the report_id and status are set correctly from the database
     report.report_id = reportId;
     report.status = reportStatus;
 
     return report;
-  }, [initialReport, entity.management_standard, reportId, reportStatus]);
+  }, [liveContent, entity.management_standard, reportId, reportStatus]);
 
-  // Live versions: subscribe to the report query so the History tab updates
-  // immediately after snapshot/edit/publish mutations invalidate the cache.
-  // Falls back to the SSR `initialReport` until the first client fetch resolves.
-  const liveReportQuery = useReport(reportId);
-  const liveContent =
-    (liveReportQuery.data?.data?.report_content as ReportContent | undefined) ?? initialReport;
   const versions = useMemo(() => {
     if (!liveContent) return [];
     return ensureVersionedShape(liveContent).versions ?? [];
@@ -243,19 +243,19 @@ export function ReportDetailsClient({
   );
 
   // Track if we've initialized to prevent redundant updates
-  const hasInitialized = useRef(false);
+  const lastMergedReportRef = useRef<typeof mergedReport>(null);
   const lastWidgetDataMapRef = useRef<typeof widgetDataMap>(null);
 
   // Initialize the store with merged report and populated widget data
   useEffect(() => {
     if (!mergedReport) return;
 
-    // Check if widget data has actually changed
+    // Re-sync when either the live report or the widget data changed
+    const mergedChanged = mergedReport !== lastMergedReportRef.current;
     const widgetDataChanged =
       JSON.stringify(widgetDataMap) !== JSON.stringify(lastWidgetDataMapRef.current);
 
-    // Skip if already initialized and widget data hasn't changed
-    if (hasInitialized.current && !widgetDataChanged) {
+    if (!mergedChanged && !widgetDataChanged) {
       return;
     }
 
@@ -285,7 +285,7 @@ export function ReportDetailsClient({
 
     setReport(finalReport);
     lastWidgetDataMapRef.current = widgetDataMap;
-    hasInitialized.current = true;
+    lastMergedReportRef.current = mergedReport;
 
     // Set the entity ID and type in the store
     if (entity.id) {
