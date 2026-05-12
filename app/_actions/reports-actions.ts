@@ -22,7 +22,9 @@ import {
   buildSnapshotFromCurrent,
   computeAggregateStatus,
   findVersionIndex,
-  applyVersionPatch
+  applyVersionPatch,
+  syncTopLevelToVersion,
+  bootstrapV1FromTopLevel
 } from "@/lib/config/version-helpers";
 import { ensureVersionedShape } from "@/lib/config/ensure-versioned-shape";
 import { verifySession } from "@/lib/session";
@@ -285,16 +287,47 @@ export async function updateReport(
   }
 
   try {
+    const { isAuthenticated, session } = await verifySession();
+    if (!isAuthenticated) {
+      return handleBadRequest("Session required to save");
+    }
+    const userRef = buildUserRef(session);
+    if (!userRef) {
+      return handleBadRequest("Session user details unavailable");
+    }
+
+    // Treat `data` as the new top-level state. Either bootstrap v1 or sync into versions[active].
+    const topLevel = ensureVersionedShape(data as ReportContent);
+    let synced: ReportContent;
+
+    if ((topLevel.versions ?? []).length === 0) {
+      synced = bootstrapV1FromTopLevel(topLevel, userRef);
+    } else {
+      const activeNum = topLevel.current_version_number;
+      if (typeof activeNum !== "number" || findVersionIndex(topLevel.versions ?? [], activeNum) === -1) {
+        // Fallback: pick highest existing version_number
+        const highest = (topLevel.versions ?? []).reduce(
+          (max, v) => (v.version_number > max ? v.version_number : max),
+          0
+        );
+        synced = syncTopLevelToVersion({ ...topLevel, current_version_number: highest }, highest, userRef);
+      } else {
+        synced = syncTopLevelToVersion(topLevel, activeNum, userRef);
+      }
+    }
+
+    const aggregateStatus = computeAggregateStatus(synced.versions ?? []);
+
     const response = await authenticatedApiClient({
       url: `/api/v1/reports/${reportId}`,
       method: "PUT",
       data: {
-        ...data,
+        ...synced,
+        status: aggregateStatus,
         is_active: data.is_active ?? true
       }
     });
 
-    // Revalidate all report-related pages
     revalidatePath("/dashboard/reports");
     revalidatePath(`/dashboard/reports/${reportId}`);
     revalidatePath("/dashboard/audit/plans", "layout");
