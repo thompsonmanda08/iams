@@ -24,7 +24,6 @@ export function ReportVersionHistory({
 }: ReportVersionHistoryProps) {
   const [openVersion, setOpenVersion] = useState<{
     version: ReportVersionSnapshot;
-    mode: "view" | "edit";
   } | null>(null);
   const publish = usePublishVersion(reportId);
   const setActive = useSetActiveVersion(reportId);
@@ -83,7 +82,7 @@ export function ReportVersionHistory({
                 size="icon"
                 variant="ghost"
                 title="View"
-                onClick={() => setOpenVersion({ version: v, mode: "view" })}
+                onClick={() => setOpenVersion({ version: v })}
               >
                 <Eye className="h-4 w-4" />
               </Button>
@@ -140,9 +139,7 @@ export function ReportVersionHistory({
 
       {openVersion && (
         <VersionViewerDialog
-          reportId={reportId}
           version={openVersion.version}
-          mode={openVersion.mode}
           open={openVersion !== null}
           onOpenChange={(open) => {
             if (!open) setOpenVersion(null);
