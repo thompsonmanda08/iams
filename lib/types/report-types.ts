@@ -164,6 +164,45 @@ export interface ReportBranding {
 // Entity type for reports (determines which entity the report is linked to)
 export type ReportEntityType = "audit_plan" | "risk_register" | "followup" | "compliance";
 
+/**
+ * Lightweight projection of the source entity (audit plan, risk register, …)
+ * passed into the report builder. The builder only reads a handful of fields
+ * and tolerates extras via the index signature.
+ */
+export interface ReportEntity {
+  id: string;
+  title: string;
+  description?: string;
+  status?: string;
+  ref_no?: string;
+  management_standard?: string;
+  // Allow additional fields from the source entity
+  [key: string]: any;
+}
+
+/**
+ * Static template-set identifier used to seed a new report's sections.
+ */
+export type ReportTemplateType =
+  | "GENERAL"
+  | "ISO 27001"
+  | "COSO"
+  | "COBIT"
+  | "NISIT"
+  | "RISK ASSESSMENT"
+  | "FOLLOW-UP";
+
+/**
+ * Static template definition consumed by `getTemplateForStandard` /
+ * `initializeReport` to bootstrap a new report.
+ */
+export interface ReportTemplate {
+  name: string;
+  type: ReportType;
+  description: string;
+  default_sections: ReportSection[];
+}
+
 export interface ReportUserRef {
   user_id: string;
   name: string;

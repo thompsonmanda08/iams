@@ -17,9 +17,7 @@ import {
   fetchWidgetData as fetchWidgetDataAction,
   getReportByEntityId,
   snapshotReportVersion,
-  updateReportVersion,
   publishReportVersion,
-  getReportVersion,
   setActiveVersion
 } from "@/app/_actions/reports-actions";
 import { getWorkpaperByAuditPlanId } from "@/app/_actions/audit-module-actions";
@@ -431,32 +429,6 @@ export function useWidgetData(
 }
 
 /**
- * Hook to fetch data for multiple widgets at once
- */
-export function useMultipleWidgetData(
-  widgets: Array<{
-    instance_id: string;
-    widget_type: "pie_chart" | "table" | "bar_chart" | "line_chart";
-    data: {
-      data_source_id?: string;
-      [key: string]: any;
-    };
-  }>,
-  entityId?: string,
-  entityType?: ReportEntityType
-) {
-  return widgets.map((widget) =>
-    useWidgetData(
-      widget.data.data_source_id,
-      widget.widget_type,
-      entityId,
-      entityType,
-      !!widget.data.data_source_id
-    )
-  );
-}
-
-/**
  * Mutation: create a new version snapshot of the current draft
  */
 export function useSnapshotVersion(reportId: string) {
@@ -476,37 +448,6 @@ export function useSnapshotVersion(reportId: string) {
     },
     onError: (error: Error) => {
       notify({ description: error.message || "Failed to save version", type: "error" });
-    }
-  });
-}
-
-/**
- * Mutation: update a specific version snapshot
- */
-export function useUpdateVersion(reportId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (args: {
-      versionNumber: number;
-      patch: Parameters<typeof updateReportVersion>[2];
-      summary?: string;
-    }) => {
-      const result = await updateReportVersion(
-        reportId,
-        args.versionNumber,
-        args.patch,
-        args.summary
-      );
-      if (!result.success) throw new Error(result.message || "Failed to update version");
-      return result.data;
-    },
-    onSuccess: (_data, args) => {
-      notify({ description: `Version ${args.versionNumber} updated`, type: "success" });
-      queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT, reportId] });
-      queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT] });
-    },
-    onError: (error: Error) => {
-      notify({ description: error.message || "Failed to update version", type: "error" });
     }
   });
 }

@@ -1,6 +1,11 @@
-import type { ReportSection, SectionType, ReportType } from "@/lib/types/report-types";
-
-export type ReportTemplateType = "GENERAL" | "ISO 27001" | "COSO" | "COBIT" | "NISIT" | "RISK ASSESSMENT" | "FOLLOW-UP";
+import type {
+  ReportSection,
+  SectionType,
+  ReportTemplate,
+  ReportTemplateType
+} from "@/lib/types/report-types";
+// Re-export for backward compatibility with existing imports
+export type { ReportTemplate, ReportTemplateType };
 
 /**
  * Helper function to get current month and year for dynamic titles
@@ -14,13 +19,6 @@ const getCurrentMonthYear = (): string => {
   ];
   return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
 };
-
-export interface ReportTemplate {
-  name: string;
-  type: ReportType;
-  description: string;
-  default_sections: ReportSection[];
-}
 
 const createSection = (
   id: string,

@@ -24,6 +24,7 @@ import type {
   DynamicSectionData,
   ReportField,
   ReportType,
+  ReportEntity,
   ReportEntityType,
   WidgetInstance,
   WidgetType
@@ -43,23 +44,8 @@ import { notify } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { formatDate } from "@/lib/utils/date-format";
 
-// Re-export for convenience
-export type { ReportEntityType };
-
-/**
- * Generic entity interface for report generation
- * Can be an audit plan, risk register, or other supported entity
- */
-export interface ReportEntity {
-  id: string;
-  title: string;
-  description?: string;
-  status?: string;
-  ref_no?: string;
-  management_standard?: string;
-  // Allow additional fields from the source entity
-  [key: string]: any;
-}
+// Re-export for backward compatibility with `@/components/reports/report-builder` callers
+export type { ReportEntity, ReportEntityType };
 
 interface ReportBuilderProps {
   /**

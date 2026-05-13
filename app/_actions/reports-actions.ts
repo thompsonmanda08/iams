@@ -22,7 +22,6 @@ import {
   buildSnapshotFromCurrent,
   computeAggregateStatus,
   findVersionIndex,
-  applyVersionPatch,
   syncTopLevelToVersion,
   bootstrapV1FromTopLevel
 } from "@/lib/config/version-helpers";
@@ -483,40 +482,6 @@ export async function publishReport(
 }
 
 /**
- * Get a single version snapshot from a report
- */
-export async function getReportVersion(
-  reportId: string,
-  versionNumber: number
-): Promise<APIResponse> {
-  if (!reportId) {
-    return handleBadRequest("Report ID is required");
-  }
-
-  try {
-    const reportRes = await getReport(reportId);
-    if (!reportRes.success || !reportRes.data?.data?.report_content) {
-      return handleBadRequest("Report not found");
-    }
-
-    const versions = reportRes.data.data.report_content.versions ?? [];
-    const snapshot = versions.find((v: any) => v.version_number === versionNumber);
-
-    if (!snapshot) {
-      return handleBadRequest(`Version ${versionNumber} not found`);
-    }
-
-    return successResponse(snapshot);
-  } catch (error: any) {
-    return handleError(
-      error,
-      "GET | GET REPORT VERSION",
-      `/api/v1/reports/${reportId}#v${versionNumber}`
-    );
-  }
-}
-
-/**
  * Create a new version snapshot from the current editor state.
  *
  * Branch-point semantics: the existing active version is left UNCHANGED on
@@ -592,74 +557,6 @@ export async function snapshotReportVersion(
       error,
       "POST | SNAPSHOT REPORT VERSION",
       `/api/v1/reports/${reportId}#snapshot`
-    );
-  }
-}
-
-/**
- * Update a specific version snapshot's fields and append an edit log entry
- */
-export async function updateReportVersion(
-  reportId: string,
-  versionNumber: number,
-  patch: Partial<{
-    label: string;
-    title: string;
-    management_standard: string;
-    branding: any;
-    sections: any[];
-  }>,
-  summary?: string
-): Promise<APIResponse> {
-  if (!reportId) {
-    return handleBadRequest("Report ID is required");
-  }
-
-  try {
-    const reportRes = await getReport(reportId);
-    if (!reportRes.success || !reportRes.data?.data?.report_content) {
-      return handleBadRequest("Report not found");
-    }
-
-    const { isAuthenticated, session } = await verifySession();
-    if (!isAuthenticated) {
-      return handleBadRequest("Session required to edit version");
-    }
-    const userRef = buildUserRef(session);
-
-    const current = ensureVersionedShape(reportRes.data.data.report_content);
-    const versions = current.versions ?? [];
-    const idx = findVersionIndex(versions, versionNumber);
-
-    if (idx === -1) {
-      return handleBadRequest(`Version ${versionNumber} not found`);
-    }
-
-    const updatedVersion = applyVersionPatch(versions[idx], patch as any, userRef, summary);
-
-    const updatedVersions = [...versions];
-    updatedVersions[idx] = updatedVersion;
-
-    const updatedContent = { ...current, versions: updatedVersions };
-    const aggregateStatus = computeAggregateStatus(updatedVersions);
-
-    const response = await authenticatedApiClient({
-      url: `/api/v1/reports/${reportId}`,
-      method: "PUT",
-      data: {
-        report_content: updatedContent,
-        status: aggregateStatus,
-        is_active: true
-      }
-    });
-
-    revalidatePath(`/dashboard/reports/${reportId}`);
-    return successResponse(response?.data, `Version ${versionNumber} updated`);
-  } catch (error: any) {
-    return handleError(
-      error,
-      "PUT | UPDATE REPORT VERSION",
-      `/api/v1/reports/${reportId}#v${versionNumber}`
     );
   }
 }

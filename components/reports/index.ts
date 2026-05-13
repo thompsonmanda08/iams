@@ -25,7 +25,6 @@ export { SectionEditor } from "./section-editor";
 export { AddSectionModal } from "./add-section-modal";
 export { AddSectionButton } from "./add-section-button";
 export { ReportHeader } from "./report-header";
-export { ReportSidebar } from "./report-sidebar";
 export { PieChartWidget } from "./pie-chart-widget";
 export { BarChartWidget } from "./bar-chart-widget";
 export { ConfigurableTable } from "./configurable-table";
