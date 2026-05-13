@@ -78,7 +78,10 @@ export async function verifyOTP({
 
   try {
     const response = await authenticatedApiClient({ url, method: "POST", data: { username, otp } });
-
+    console.log(
+      "✅ [OTP Verified] OTP verification successful, response received from backend",
+      response?.data
+    );
     // Update authentication session with new access token and mark MFA as complete
     await updateAuthSession({
       mfa_required: false, // MFA is now complete
