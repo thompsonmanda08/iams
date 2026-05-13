@@ -262,18 +262,9 @@ export function ReportBuilder({
   // Handle data source change with real data fetching
   const handleWidgetDataSourceChange = useCallback(
     async (sectionId: string, widgetId: string, dataSource: DataSource | null) => {
-      console.log("🔍 [handleWidgetDataSourceChange] Data source change triggered:", {
-        sectionId,
-        widgetId,
-        dataSourceId: dataSource?.id,
-        dataSourceName: dataSource?.name
-      });
 
       // If no data source selected (manual mode), just update the reference
       if (!dataSource) {
-        console.log(
-          "🔍 [handleWidgetDataSourceChange] No data source selected, switching to manual mode"
-        );
         updateWidgetDataSource(sectionId, widgetId, null);
         return;
       }
@@ -282,11 +273,6 @@ export function ReportBuilder({
       const section = report?.sections.find((s) => s.section_id === sectionId);
       const widget = section?.widgets.find((w) => w.instance_id === widgetId);
 
-      console.log("🔍 [handleWidgetDataSourceChange] Widget found:", {
-        widgetId: widget?.instance_id,
-        widgetType: widget?.widget_type,
-        currentDataSourceId: widget?.data?.data_source_id
-      });
 
       if (!widget) {
         console.error("❌ [handleWidgetDataSourceChange] Widget not found");
@@ -296,7 +282,6 @@ export function ReportBuilder({
       try {
         // Fetch real data from the API
         notify({ description: "Fetching data...", type: "info" });
-        console.log("🔍 [handleWidgetDataSourceChange] Fetching data from API...");
 
         const widgetType = widget.widget_type as
           | "pie_chart"
@@ -309,18 +294,12 @@ export function ReportBuilder({
 
         const result = await getDataSourceData(dataSource.id, widgetType, entity.id, entityType);
 
-        console.log("🔍 [handleWidgetDataSourceChange] Fetch result:", {
-          success: result.success,
-          hasData: !!result.data,
-          dataType: typeof result.data
-        });
 
         if (!result.success) {
           throw new Error(result.message || "Failed to fetch data");
         }
 
         // Transform the data to widget format
-        console.log("🔍 [handleWidgetDataSourceChange] Transforming data...");
         const transformedData = transformWidgetData(
           result.data,
           widget.widget_type,
@@ -328,18 +307,11 @@ export function ReportBuilder({
           dataSource.name
         );
 
-        console.log("🔍 [handleWidgetDataSourceChange] Transformed data:", {
-          title: transformedData.title,
-          dataSourceId: transformedData.data_source_id,
-          keys: Object.keys(transformedData)
-        });
 
         // Update the widget with fetched data (clear manual override if any)
-        console.log("🔍 [handleWidgetDataSourceChange] Updating widget data in store...");
         updateWidgetData(sectionId, widgetId, { ...transformedData, is_manual_override: false });
 
         notify({ description: "Data loaded successfully", type: "success" });
-        console.log("✅ [handleWidgetDataSourceChange] Data source change completed successfully");
       } catch (error: any) {
         console.error("❌ [handleWidgetDataSourceChange] Failed to fetch widget data:", error);
         notify({ description: error.message || "Failed to fetch data", type: "error" });
@@ -354,11 +326,6 @@ export function ReportBuilder({
   // Handle widget type change with real data fetching
   const handleWidgetTypeChange = useCallback(
     async (sectionId: string, widgetId: string, newType: WidgetType) => {
-      console.log("🔍 [handleWidgetTypeChange] Widget type change triggered:", {
-        sectionId,
-        widgetId,
-        newType
-      });
 
       // Find the widget to get its current data source
       const section = report?.sections.find((s) => s.section_id === sectionId);
@@ -369,16 +336,11 @@ export function ReportBuilder({
         return;
       }
 
-      console.log("🔍 [handleWidgetTypeChange] Current widget:", {
-        currentType: widget.widget_type,
-        dataSourceId: widget.data?.data_source_id
-      });
 
       // If widget has a data source, fetch new data for the new type
       if (widget.data?.data_source_id) {
         try {
           notify({ description: "Changing widget type and fetching data...", type: "info" });
-          console.log("🔍 [handleWidgetTypeChange] Fetching data for new type...");
 
           const widgetType = newType as
             | "pie_chart"
@@ -401,7 +363,6 @@ export function ReportBuilder({
           }
 
           // Transform the data to the new widget format
-          console.log("🔍 [handleWidgetTypeChange] Transforming data for new type...");
           const transformedData = transformWidgetData(
             result.data,
             newType,
@@ -409,21 +370,18 @@ export function ReportBuilder({
             widget.data.title
           );
 
-          console.log("🔍 [handleWidgetTypeChange] Updating widget with new type and data...");
           updateWidget(sectionId, widgetId, {
             widget_type: newType,
             data: transformedData
           });
 
           notify({ description: "Widget type changed successfully", type: "success" });
-          console.log("✅ [handleWidgetTypeChange] Widget type change completed successfully");
         } catch (error: any) {
           console.error("❌ [handleWidgetTypeChange] Failed:", error);
           notify({ description: error.message || "Failed to change widget type", type: "error" });
         }
       } else {
         // No data source, just change the type without fetching data
-        console.log("🔍 [handleWidgetTypeChange] No data source, just changing type");
         updateWidget(sectionId, widgetId, {
           widget_type: newType
         });
@@ -436,7 +394,6 @@ export function ReportBuilder({
   // Handle widget data retry
   const handleRetryWidget = useCallback(
     async (sectionId: string, widgetId: string) => {
-      console.log("🔄 [handleRetryWidget] Retry triggered:", { sectionId, widgetId });
       setRetryingWidget({ sectionId, widgetId });
 
       // Find the widget
@@ -483,7 +440,6 @@ export function ReportBuilder({
 
         updateWidgetData(sectionId, widgetId, transformedData);
         notify({ description: "Data loaded successfully", type: "success" });
-        console.log("✅ [handleRetryWidget] Retry successful");
       } catch (error: any) {
         console.error("❌ [handleRetryWidget] Retry failed:", error);
         notify({ description: error.message || "Failed to fetch data", type: "error" });

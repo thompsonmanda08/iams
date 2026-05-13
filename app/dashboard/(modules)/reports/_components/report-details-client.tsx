@@ -81,10 +81,6 @@ function useWidgetDataPopulation(
         return {};
       }
 
-      console.log(
-        `Fetching data for ${widgetsWithDataSources.length} widgets with data sources...`
-      );
-
       // Fetch all widget data in parallel
       const fetchPromises = widgetsWithDataSources.map(async ({ sectionId, widget }) => {
         const dataSourceId = widget.data.data_source_id;

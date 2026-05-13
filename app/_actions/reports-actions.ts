@@ -328,7 +328,6 @@ export async function createReport(params: CreateReport): Promise<APIResponse> {
       data: params
     });
 
-    console.log("Create Report Response:", response.data);
     return successResponse(response?.data?.data, "Report created successfully");
   } catch (error: any) {
     return handleError(error, "POST | CREATE REPORT", "/api/v1/reports");
@@ -773,8 +772,6 @@ export async function fetchWidgetData(params: FetchWidgetDataParams): Promise<AP
  * Returns a unified list of all data sources with sample data for each widget type
  */
 export async function getAllDataSources(): Promise<APIResponse> {
-  console.log("🔍 [getAllDataSources] Fetching all data sources from API...");
-
   try {
     const response = await authenticatedApiClient({
       url: "/api/v1/data-sources",
@@ -784,43 +781,22 @@ export async function getAllDataSources(): Promise<APIResponse> {
     // Handle various response structures from the API
     const apiData = response?.data?.data || response?.data;
 
-    console.log("🔍 [getAllDataSources] Raw API response:", {
-      hasData: !!response?.data,
-      dataType: typeof apiData,
-      isArray: Array.isArray(apiData),
-      length: Array.isArray(apiData) ? apiData.length : "N/A"
-    });
-
     // Validate that we got an array
     if (!Array.isArray(apiData)) {
-      console.warn("⚠️ [getAllDataSources] API returned invalid data format, using mock data");
+      console.warn("[getAllDataSources] API returned invalid data format, using mock data");
       return successResponse([]);
     }
 
     // If API returns empty array, use mock data as fallback
     if (apiData.length === 0) {
-      console.warn("⚠️ [getAllDataSources] API returned no data sources, using mock data");
+      console.warn("[getAllDataSources] API returned no data sources, using mock data");
       return successResponse([]);
     }
-
-    console.log(
-      `✅ [getAllDataSources] Successfully loaded ${apiData.length} data sources from API`
-    );
-    console.table(
-      apiData.map((ds: any) => ({
-        id: ds.id,
-        name: ds.name,
-        category: ds.category,
-        compatible_widgets: ds.compatible_widgets?.join(", "),
-        requires_entity: ds.requires_entity
-      }))
-    );
 
     return successResponse(apiData);
   } catch (error: any) {
     // Fallback to mock data sources if API not available
-    console.error("❌ [getAllDataSources] API error:", error?.message || error);
-    console.warn("⚠️ [getAllDataSources] Using mock data sources as fallback");
+    console.error("[getAllDataSources] API error:", error?.message || error);
     return successResponse([]);
   }
 }
@@ -839,21 +815,7 @@ export async function getDataSourceById(dataSourceId: string): Promise<APIRespon
     // Fetch all data sources
     const allSourcesRes = await getAllDataSources();
 
-    console.log("DEBUG [getDataSourceById]:", {
-      dataSourceId,
-      success: allSourcesRes.success,
-      dataType: typeof allSourcesRes.data,
-      isArray: Array.isArray(allSourcesRes.data),
-      dataLength: Array.isArray(allSourcesRes.data) ? allSourcesRes.data.length : "N/A",
-      firstItem: Array.isArray(allSourcesRes.data) ? allSourcesRes.data[0] : "N/A"
-    });
-
     if (!allSourcesRes.success || !Array.isArray(allSourcesRes.data)) {
-      console.error("DEBUG [getDataSourceById] Failed:", {
-        success: allSourcesRes.success,
-        isArray: Array.isArray(allSourcesRes.data),
-        data: allSourcesRes.data
-      });
       return handleError(
         new Error("Failed to fetch data sources"),
         "GET | GET DATA SOURCE BY ID",
@@ -865,19 +827,11 @@ export async function getDataSourceById(dataSourceId: string): Promise<APIRespon
     const dataSource = allSourcesRes.data.find((ds: any) => ds.id === dataSourceId);
 
     if (!dataSource) {
-      // Log all available IDs for debugging
-      const availableIds = allSourcesRes.data.map((ds: any) => ds.id);
-      console.warn(
-        `DEBUG [getDataSourceById] Not found. Looking for: "${dataSourceId}". Available IDs:`,
-        availableIds
-      );
       return handleBadRequest(`Data source with ID "${dataSourceId}" not found`);
     }
 
-    console.log("DEBUG [getDataSourceById] Found data source:", dataSourceId);
     return successResponse(dataSource);
   } catch (error: any) {
-    console.error("DEBUG [getDataSourceById] Exception:", error);
     return handleError(error, "GET | GET DATA SOURCE BY ID", `/data-sources?id=${dataSourceId}`);
   }
 }
@@ -903,13 +857,6 @@ export async function getDataSourceData(
   entityId?: string,
   entityType?: ReportEntityType
 ): Promise<APIResponse> {
-  console.log("🔍 [getDataSourceData] Fetching data:", {
-    dataSourceId,
-    widgetType,
-    entityId,
-    entityType
-  });
-
   try {
     // Fetch actual data from the backend endpoint
     // Format: GET /data-sources/{dataSourceId}?widget_type={widgetType}&{entity_param}={id}
@@ -930,11 +877,9 @@ export async function getDataSourceData(
               : "entity_id"; // Generic fallback
 
       params.append(entityParamName, entityId);
-      console.log(`🔍 [getDataSourceData] Using entity param: ${entityParamName}=${entityId}`);
     }
 
     const url = `/api/v1/data-sources/${dataSourceId}?${params.toString()}`;
-    console.log("🔍 [getDataSourceData] API URL:", url);
 
     const response = await authenticatedApiClient({
       url,
@@ -944,43 +889,12 @@ export async function getDataSourceData(
     if (response?.data) {
       // Extract the actual widget data from nested response structure
       const widgetData = response.data?.data || response.data;
-
-      console.log(
-        `✅ [getDataSourceData] Successfully fetched REAL data for ${dataSourceId} (${widgetType})`
-      );
-      console.log("🔍 [getDataSourceData] Data structure:", {
-        dataType: typeof widgetData,
-        isArray: Array.isArray(widgetData),
-        keys: typeof widgetData === "object" && widgetData !== null ? Object.keys(widgetData) : [],
-        sampleData: Array.isArray(widgetData)
-          ? `Array with ${widgetData.length} items`
-          : typeof widgetData === "object"
-            ? JSON.stringify(widgetData, null, 2).substring(0, 200) + "..."
-            : widgetData
-      });
-
-      // Special logging for pie chart data to inspect colors
-      if (widgetType === "pie_chart") {
-        const slices = Array.isArray(widgetData) ? widgetData : widgetData?.slices || [];
-        console.log(
-          "🎨 [getDataSourceData] Pie chart slices with colors:",
-          JSON.stringify(slices, null, 2)
-        );
-      }
-
       return successResponse(widgetData);
     }
 
-    console.error("❌ [getDataSourceData] No data received from endpoint");
     return handleBadRequest("No data received from data source endpoint");
   } catch (error: any) {
-    // Fallback to mock sample data if API fails
-    console.error("❌ [getDataSourceData] API error:", error?.message || error);
-    console.warn(
-      `⚠️ [getDataSourceData] API failed for ${dataSourceId}, attempting to use mock sample data`
-    );
-
-    console.error(`❌ [getDataSourceData] No fallback data available for ${dataSourceId}`);
+    console.error("[getDataSourceData] API error:", error?.message || error);
     return handleError(
       error,
       "GET | DATA SOURCE DATA",
@@ -1107,10 +1021,6 @@ export async function fetchFindingsForReport(auditPlanId?: string): Promise<APIR
           );
         }
       }
-
-      console.log(
-        `📋 [fetchFindingsForReport] Found ${rawFindings.length} findings for audit plan ${auditPlanId}`
-      );
 
       // Helper function to normalize conformity status
       const normalizeConformityStatus = (

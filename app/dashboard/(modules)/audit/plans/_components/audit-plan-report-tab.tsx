@@ -72,12 +72,9 @@ export function AuditPlanReportTab({ auditPlan }: AuditPlanReportTabProps) {
       mergedReport.report_id = record.id;
       mergedReport.status = record.status;
 
-      console.log("Setting merged report in store:", mergedReport);
       setReport(mergedReport);
     }
   }, [reportData, auditPlan.management_standard, setReport]);
-
-  console.log("Audit Plan Report:", report, reportData);
 
   // Handle create report
   const handleCreateReport = () => {

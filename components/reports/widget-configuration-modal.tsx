@@ -201,11 +201,7 @@ export function WidgetConfigurationModal({
 
   // Confirm and fetch data
   const handleConfirm = useCallback(async () => {
-    console.log("🔍 [WidgetConfigModal] handleConfirm triggered:", {
-      selectedDataSource: selectedDataSource?.id,
-      selectedWidgetType,
-      entityId
-    });
+
 
     if (!selectedDataSource || !selectedWidgetType) {
       setError("Please select both a data source and widget type");
@@ -220,9 +216,7 @@ export function WidgetConfigurationModal({
 
       // Handle manual entry - create empty data structures
       if (selectedDataSource.id === "manual") {
-        console.log(
-          "🔍 [WidgetConfigModal] Manual entry selected, creating empty data structure..."
-        );
+
 
         // Create empty data structure based on widget type
         const emptyData = getEmptyDataForWidgetType(selectedWidgetType);
@@ -232,13 +226,10 @@ export function WidgetConfigurationModal({
           data_source_id: "manual"
         };
 
-        console.log("✅ [WidgetConfigModal] Empty data structure created:", {
-          widgetType: selectedWidgetType,
-          keys: Object.keys(transformedData)
-        });
+
       } else {
         // Fetch real data from API
-        console.log("🔍 [WidgetConfigModal] Fetching widget data from API...");
+
         const rawData = await fetchWidgetData({
           dataSourceId: selectedDataSource.id,
           widgetType: selectedWidgetType,
@@ -246,14 +237,10 @@ export function WidgetConfigurationModal({
           entityType
         });
 
-        console.log("🔍 [WidgetConfigModal] Raw data received:", {
-          dataType: typeof rawData,
-          isArray: Array.isArray(rawData),
-          keys: typeof rawData === "object" && rawData !== null ? Object.keys(rawData) : []
-        });
+
 
         // Transform the data based on widget type
-        console.log("🔍 [WidgetConfigModal] Transforming data...");
+
         transformedData = transformWidgetData(
           rawData,
           selectedWidgetType,
@@ -261,18 +248,10 @@ export function WidgetConfigurationModal({
           selectedDataSource.name
         );
 
-        console.log("🔍 [WidgetConfigModal] Transformed data:", {
-          title: transformedData.title,
-          dataSourceId: transformedData.data_source_id,
-          keys: Object.keys(transformedData)
-        });
+
       }
 
-      console.log("🔍 [WidgetConfigModal] Calling onConfigure with config:", {
-        dataSourceId: selectedDataSource.id,
-        dataSourceName: selectedDataSource.name,
-        widgetType: selectedWidgetType
-      });
+
 
       onConfigure({
         dataSourceId: selectedDataSource.id,
@@ -281,7 +260,7 @@ export function WidgetConfigurationModal({
         data: transformedData
       });
 
-      console.log("✅ [WidgetConfigModal] Widget configured successfully");
+
 
       // Reset and close
       handleOpenChange(false);
@@ -458,11 +437,7 @@ function InlineDataSourceSelector({
   }, [filteredByAllowedCategories, selectedCategory, searchQuery]);
 
   const handleSelect = (dataSource: DataSource) => {
-    console.log("✅ [InlineDataSourceSelector] Data source selected:", {
-      id: dataSource.id,
-      name: dataSource.name,
-      category: dataSource.category
-    });
+
     onSelect(dataSource);
   };
 

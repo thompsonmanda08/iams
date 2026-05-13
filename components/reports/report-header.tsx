@@ -19,13 +19,13 @@ export const ReportHeader = () => {
     setExportError(null);
 
     try {
-      console.log("Exporting PDF for report:", report.title);
-      console.log("Report data:", report);
+
+
 
       // Generate PDF directly on client side
       const blob = await pdf(<PDFDocument report={report} findings={[]} generalFindings={[]} generalFindingsConfig={null} />).toBlob();
 
-      console.log("PDF blob generated, size:", blob.size);
+
 
       if (blob.size === 0) {
         throw new Error("Generated PDF is empty");
@@ -43,7 +43,7 @@ export const ReportHeader = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      console.log("PDF download initiated successfully");
+
     } catch (error) {
       console.error("Export error:", error);
       setExportError(error instanceof Error ? error.message : "Failed to export PDF");
@@ -53,12 +53,12 @@ export const ReportHeader = () => {
   };
 
   const exportReport = () => {
-    console.log("Exporting report:", JSON.stringify(report, null, 2));
+
     alert("Report JSON export - see console for output");
   };
 
   const saveReport = () => {
-    console.log("Saving report:", JSON.stringify(report, null, 2));
+
     alert("Report saved! See console for JSON output.");
   };
 

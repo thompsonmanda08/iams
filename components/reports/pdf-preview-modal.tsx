@@ -81,12 +81,8 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
     setError(null);
 
     try {
-      console.log("Generating PDF with report:", report.title);
-
       // Generate PDF directly on client side
       const blob = await pdf(<PDFDocument report={report} findings={findings} generalFindings={generalFindings} generalFindingsConfig={generalFindingsConfig} workpaperMetadata={workpaperMetadata} />).toBlob();
-
-      console.log("PDF blob generated, size:", blob.size);
 
       if (blob.size === 0) {
         throw new Error("Generated PDF is empty");
@@ -94,7 +90,6 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
 
       // Create blob URL for react-pdf
       const url = URL.createObjectURL(blob);
-      console.log("PDF URL created:", url);
       pdfUrlRef.current = url;
       setPdfUrl(url);
     } catch (err) {
@@ -108,7 +103,6 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
     setPageNumber(1);
-    console.log(`PDF loaded successfully with ${numPages} pages`);
   };
 
   const onDocumentLoadError = (error: Error) => {
