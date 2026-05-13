@@ -47,23 +47,17 @@ export default async function ReportsPage({
   const pagination = reportsResponse?.data?.pagination || null;
 
   // Get counts for each status in parallel
-  const [
-    draftReportsResponse,
-    publishedReportsResponse,
-    inReviewReportsResponse,
-    archivedReportsResponse
-  ] = await Promise.all([
-    getReports({ page: 1, page_size: 1, status: "DRAFT" }),
-    getReports({ page: 1, page_size: 1, status: "PUBLISHED" }),
-    getReports({ page: 1, page_size: 1, status: "IN_REVIEW" }),
-    getReports({ page: 1, page_size: 1, status: "ARCHIVED" })
-  ]);
+  const [draftReportsResponse, publishedReportsResponse, archivedReportsResponse] =
+    await Promise.all([
+      getReports({ page: 1, page_size: 1, status: "DRAFT" }),
+      getReports({ page: 1, page_size: 1, status: "PUBLISHED" }),
+      getReports({ page: 1, page_size: 1, status: "ARCHIVED" })
+    ]);
 
   const counts = {
     all: pagination?.total || 0,
     draft: draftReportsResponse?.data?.pagination?.total || 0,
     published: publishedReportsResponse?.data?.pagination?.total || 0,
-    in_review: inReviewReportsResponse?.data?.pagination?.total || 0,
     archived: archivedReportsResponse?.data?.pagination?.total || 0
   };
 

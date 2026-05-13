@@ -28,8 +28,41 @@ import {
 } from "@/lib/config/version-helpers";
 import { ensureVersionedShape } from "@/lib/config/ensure-versioned-shape";
 import { verifySession } from "@/lib/session";
+import { fetchSystemSetup } from "@/app/_actions/auth-actions";
+import { buildPermissionMap } from "@/lib/permissions/build-permission-map";
+import { MODULE_CODES, type ModuleCode } from "@/lib/constants/module-codes";
+import type { PermissionAction } from "@/lib/types";
 import type { ReportUserRef } from "@/lib/types/report-types";
 import type { DataSource } from "@/lib/types/report-types";
+
+/**
+ * Server-side action-permission guard. Returns a denial APIResponse when the
+ * caller lacks the requested permission, or null when allowed. Fails OPEN on
+ * permission-fetch failures to avoid false denials during transient outages —
+ * mirrors the posture of requireModuleView in lib/permissions/server.ts.
+ *
+ * BACKOFFICE_ADMIN bypasses the check.
+ */
+async function assertActionPermission(
+  moduleCode: ModuleCode,
+  action: PermissionAction
+): Promise<APIResponse | null> {
+  const { isAuthenticated, user_type } = await verifySession();
+  if (!isAuthenticated) return handleBadRequest("Session required");
+  if (user_type === "BACKOFFICE_ADMIN") return null;
+
+  const setup = await fetchSystemSetup();
+  if (!setup?.success) return null; // fail open on fetch failure
+
+  const perms = (setup?.data as any)?.permissions as any[] | undefined;
+  if (!Array.isArray(perms) || perms.length === 0) return null;
+
+  const map = buildPermissionMap(perms);
+  if (map.get(moduleCode)?.[action] !== true) {
+    return handleBadRequest(`You do not have permission to ${action} this resource`);
+  }
+  return null;
+}
 
 // ============================================================================
 // DASHBOARD STATISTICS
@@ -174,7 +207,25 @@ export async function getReports(params: GetReportsParams = {}): Promise<APIResp
       url,
       method: "GET"
     });
-    return successResponse(response?.data?.data, "Reports fetched successfully");
+
+    // Lazy-migrate report_content on each list item so consumers always see versioned shape
+    const payload = response?.data?.data;
+    if (payload && Array.isArray(payload?.data)) {
+      payload.data = payload.data.map((rec: any) =>
+        rec?.report_content
+          ? { ...rec, report_content: ensureVersionedShape(rec.report_content) }
+          : rec
+      );
+    } else if (Array.isArray(payload)) {
+      for (let i = 0; i < payload.length; i++) {
+        const rec = payload[i];
+        if (rec?.report_content) {
+          payload[i] = { ...rec, report_content: ensureVersionedShape(rec.report_content) };
+        }
+      }
+    }
+
+    return successResponse(payload, "Reports fetched successfully");
   } catch (error: any) {
     return handleError(error, "GET | GET REPORTS", "/api/v1/reports");
   }
@@ -197,9 +248,7 @@ export async function getReport(reportId: string): Promise<APIResponse> {
 
     // Lazy-migrate report_content shape so consumers always see { versions, current_version_number }
     if (response?.data?.data?.report_content) {
-      response.data.data.report_content = ensureVersionedShape(
-        response.data.data.report_content
-      );
+      response.data.data.report_content = ensureVersionedShape(response.data.data.report_content);
     }
 
     return successResponse(response?.data);
@@ -234,7 +283,11 @@ export async function getReportByEntityId(
         : [];
 
     if (reportsList.length > 0) {
-      const fullReport = reportsList[0];
+      const fullReport = reportsList[0] as any;
+      // Lazy-migrate report_content shape on the entity-based fetch path too
+      if (fullReport?.report_content) {
+        fullReport.report_content = ensureVersionedShape(fullReport.report_content);
+      }
       return successResponse(fullReport, ` Report fetched for entity ${entityId}`);
     }
 
@@ -307,7 +360,9 @@ export async function updateReport(
     // `data` itself as the content.
     const wrapper = data as any;
     const hasWrapper =
-      wrapper && typeof wrapper === "object" && wrapper.report_content &&
+      wrapper &&
+      typeof wrapper === "object" &&
+      wrapper.report_content &&
       typeof wrapper.report_content === "object";
     const incomingContent: ReportContent = hasWrapper
       ? (wrapper.report_content as ReportContent)
@@ -320,13 +375,20 @@ export async function updateReport(
       synced = bootstrapV1FromTopLevel(topLevel, userRef);
     } else {
       const activeNum = topLevel.current_version_number;
-      if (typeof activeNum !== "number" || findVersionIndex(topLevel.versions ?? [], activeNum) === -1) {
+      if (
+        typeof activeNum !== "number" ||
+        findVersionIndex(topLevel.versions ?? [], activeNum) === -1
+      ) {
         // Fallback: pick highest existing version_number
         const highest = (topLevel.versions ?? []).reduce(
           (max, v) => (v.version_number > max ? v.version_number : max),
           0
         );
-        synced = syncTopLevelToVersion({ ...topLevel, current_version_number: highest }, highest, userRef);
+        synced = syncTopLevelToVersion(
+          { ...topLevel, current_version_number: highest },
+          highest,
+          userRef
+        );
       } else {
         synced = syncTopLevelToVersion(topLevel, activeNum, userRef);
       }
@@ -393,6 +455,9 @@ export async function publishReport(
     return handleBadRequest("Report ID is required");
   }
 
+  const deny = await assertActionPermission(MODULE_CODES.AUDIT_REPORTS, "can_edit");
+  if (deny) return deny;
+
   try {
     const reportRes = await getReport(reportId);
     if (!reportRes.success || !reportRes.data?.data?.report_content) {
@@ -414,25 +479,6 @@ export async function publishReport(
     return publishReportVersion(reportId, active, generatePdf);
   } catch (error: any) {
     return handleError(error, "POST | PUBLISH REPORT", `/api/v1/reports/${reportId}/publish`);
-  }
-}
-
-/**
- * Duplicate a report
- */
-export async function duplicateReport(reportId: string): Promise<APIResponse> {
-  if (!reportId) {
-    return handleBadRequest("Report ID is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      url: `/api/v1/reports/${reportId}/duplicate`,
-      method: "POST"
-    });
-    return successResponse(response?.data, "Report duplicated successfully");
-  } catch (error: any) {
-    return handleError(error, "POST | DUPLICATE REPORT", `/api/v1/reports/${reportId}/duplicate`);
   }
 }
 
@@ -538,6 +584,7 @@ export async function snapshotReportVersion(
       }
     });
 
+    revalidatePath("/dashboard/reports");
     revalidatePath(`/dashboard/reports/${reportId}`);
     return successResponse(response?.data, `Snapshot v${newSnapshot.version_number} created`);
   } catch (error: any) {
@@ -630,6 +677,9 @@ export async function publishReportVersion(
     return handleBadRequest("Report ID is required");
   }
 
+  const deny = await assertActionPermission(MODULE_CODES.AUDIT_REPORTS, "can_edit");
+  if (deny) return deny;
+
   try {
     const reportRes = await getReport(reportId);
     if (!reportRes.success || !reportRes.data?.data?.report_content) {
@@ -715,10 +765,8 @@ export async function setActiveVersion(
     return handleBadRequest("Report ID is required");
   }
 
-  const { isAuthenticated } = await verifySession();
-  if (!isAuthenticated) {
-    return handleBadRequest("Session required to switch versions");
-  }
+  const deny = await assertActionPermission(MODULE_CODES.AUDIT_REPORTS, "can_edit");
+  if (deny) return deny;
 
   try {
     const reportRes = await getReport(reportId);
@@ -1266,7 +1314,7 @@ export async function initializeReport(
 
   const now = new Date().toISOString();
 
-  const report: ReportContent = {
+  const report: ReportContent = ensureVersionedShape({
     report_id: `rep-${Date.now()}`,
     report_type: template.type,
     title: title || `${template.name} Report`,
@@ -1281,7 +1329,7 @@ export async function initializeReport(
       font_family: "Inter"
     },
     sections: template.default_sections
-  };
+  });
 
   // Return report content along with entity references (stored separately in DB)
   return successResponse({ ...report, _entity_id: entityId, _entity_type: entityType });
@@ -1316,8 +1364,11 @@ export async function saveReport(
   entityType?: ReportEntityType
 ): Promise<APIResponse> {
   if (report.id.trim()) {
-    // Update existing
-    return updateReport(report.id, report);
+    // Update existing — pass the nested ReportContent when present so updateReport
+    // gets a type-safe Partial<ReportContent>. updateReport also handles the
+    // wrapper shape defensively for older callers.
+    const content = (report.report_content ?? (report as unknown)) as Partial<ReportContent>;
+    return updateReport(report.id, content);
   } else {
     // Create new - requires entity_id and entity_type
     if (!entityId || !entityType) {
@@ -1326,7 +1377,7 @@ export async function saveReport(
     return createReport({
       title: report.title,
       report_type: report.report_type,
-      report_content: report,
+      report_content: (report.report_content ?? report) as unknown as Partial<ReportContent>,
       entity_id: entityId,
       entity_type: entityType
     });
