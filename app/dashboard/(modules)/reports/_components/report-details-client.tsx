@@ -242,20 +242,21 @@ export function ReportDetailsClient({
     !!mergedReport
   );
 
-  // Track if we've initialized to prevent redundant updates
+  // Reactivity sync: push the live server report (with widget data populated)
+  // into the Zustand store whenever EITHER mergedReport identity OR the
+  // widgetDataMap reference changes. Identity comparison avoids the expensive
+  // JSON.stringify deep-compare that used to run on every render — TanStack
+  // Query returns a new reference per fetch, so identity is reliable.
   const lastMergedReportRef = useRef<typeof mergedReport>(null);
   const lastWidgetDataMapRef = useRef<typeof widgetDataMap>(null);
 
-  // Initialize the store with merged report and populated widget data
   useEffect(() => {
     if (!mergedReport) return;
 
-    // Re-sync when either the live report or the widget data changed
-    const mergedChanged = mergedReport !== lastMergedReportRef.current;
-    const widgetDataChanged =
-      JSON.stringify(widgetDataMap) !== JSON.stringify(lastWidgetDataMapRef.current);
-
-    if (!mergedChanged && !widgetDataChanged) {
+    if (
+      mergedReport === lastMergedReportRef.current &&
+      widgetDataMap === lastWidgetDataMapRef.current
+    ) {
       return;
     }
 
@@ -272,11 +273,6 @@ export function ReportDetailsClient({
           ...mergedReport,
           sections: updatedSections
         };
-        console.log(
-          "Widget data populated successfully for",
-          Object.keys(widgetDataMap).length,
-          "sections"
-        );
       } catch (error) {
         console.error("Error applying widget data:", error);
         // Continue with unmodified report if population fails

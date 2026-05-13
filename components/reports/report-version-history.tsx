@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { usePublishVersion, useSetActiveVersion } from "@/hooks/use-report-queries";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import type { ReportVersionSnapshot } from "@/lib/types/report-types";
 import { VersionViewerDialog } from "./version-viewer-dialog";
 
@@ -27,6 +29,8 @@ export function ReportVersionHistory({
   } | null>(null);
   const publish = usePublishVersion(reportId);
   const setActive = useSetActiveVersion(reportId);
+  const { hasPermission } = usePermissions();
+  const canEditReport = hasPermission(MODULE_CODES.AUDIT_REPORTS, "can_edit");
 
   const sorted = useMemo(
     () => [...versions].sort((a, b) => b.version_number - a.version_number),
@@ -89,8 +93,18 @@ export function ReportVersionHistory({
               <Button
                 size="icon"
                 variant="ghost"
-                title={v.version_number === activeVersionNumber ? "Active" : "Set as active"}
-                disabled={setActive.isPending || v.version_number === activeVersionNumber}
+                title={
+                  !canEditReport
+                    ? "You do not have permission to edit this resource"
+                    : v.version_number === activeVersionNumber
+                      ? "Active"
+                      : "Set as active"
+                }
+                disabled={
+                  !canEditReport ||
+                  setActive.isPending ||
+                  v.version_number === activeVersionNumber
+                }
                 onClick={() => setActive.mutate(v.version_number)}
               >
                 <CheckCircle2
@@ -112,8 +126,12 @@ export function ReportVersionHistory({
                 <Button
                   size="icon"
                   variant="ghost"
-                  title="Retry PDF generation"
-                  disabled={publish.isPending}
+                  title={
+                    canEditReport
+                      ? "Retry PDF generation"
+                      : "You do not have permission to edit this resource"
+                  }
+                  disabled={!canEditReport || publish.isPending}
                   onClick={() =>
                     publish.mutate({ versionNumber: v.version_number, generatePdf: true })
                   }
@@ -125,8 +143,12 @@ export function ReportVersionHistory({
                 <Button
                   size="icon"
                   variant="ghost"
-                  title="Submit for Approval"
-                  disabled={publish.isPending}
+                  title={
+                    canEditReport
+                      ? "Submit for Approval"
+                      : "You do not have permission to edit this resource"
+                  }
+                  disabled={!canEditReport || publish.isPending}
                   onClick={() => publish.mutate({ versionNumber: v.version_number })}
                 >
                   <Send className="h-4 w-4" />

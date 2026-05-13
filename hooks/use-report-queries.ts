@@ -174,8 +174,6 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
         management_standard: report.management_standard
       };
 
-      console.log("Saving report:", saveReportData);
-
       const result = await saveReportAction(
         saveReportData,
         entityId || undefined,
